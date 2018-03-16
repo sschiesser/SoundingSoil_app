@@ -1,0 +1,98 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+ xmlns:tools="http://schemas.android.com/tools"
+ android:layout_width="fill_parent"
+ android:layout_height="fill_parent"
+ android:orientation="vertical"
+ android:weightSum="100"
+ android:background="#FFFFFF" >
+
+ <LinearLayout
+    android:layout_width="fill_parent"
+    android:layout_height="0dp"
+    android:layout_weight="9"
+    android:background="#6fae3c" >
+    <TextView  
+    	android:layout_width="fill_parent" 
+    	android:layout_height="wrap_content" 
+    	android:text="@string/hello"
+    	android:textSize="51.5sp"
+    	android:textColor="#FFFFFF"
+    	android:layout_weight="1"
+    	android:layout_marginLeft='10dp'
+    />
+ </LinearLayout>
+ 
+ <LinearLayout
+    android:layout_width="fill_parent"
+    android:layout_height="0dp"
+    android:layout_weight="0.5"
+    android:background="@drawable/border_shadow" >
+ </LinearLayout>
+ 
+ <RelativeLayout
+    android:layout_width="fill_parent"
+    android:layout_height="0dp"
+    android:layout_weight="30"
+    android:layout_marginLeft="10dp"
+    android:layout_marginRight="10dp"
+    android:layout_marginTop="10dp"
+    android:background="@drawable/border" >
+ </RelativeLayout>
+ <!--  Hei Dave ch -->
+ <RelativeLayout
+    android:layout_width="fill_parent"
+    android:layout_height="0dp"
+    android:layout_weight="40"
+    android:layout_marginLeft="10dp"
+    android:layout_marginRight="10dp"
+    android:layout_marginTop="15dp"
+    android:background="@drawable/border">
+    <TextView  
+    	android:layout_width="fill_parent" 
+    	android:layout_height="wrap_content" 
+    	android:text="@string/hello"
+    	android:textSize="20sp"
+    	android:textColor="#6fae3c"
+    	android:layout_marginLeft="25dp"
+    />
+ </RelativeLayout> 
+
+ <LinearLayout
+    android:layout_width="fill_parent"
+    android:layout_height="0dp"
+    android:layout_weight="21"
+    android:orientation="horizontal"
+    android:weightSum="100" >
+
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="fill_parent"
+        android:layout_weight="50"
+        android:background="#FFFFFF"
+        android:id="@+id/rl">
+        <Button
+    		android:layout_height="150dp"
+     		android:layout_width="150dp"
+     		android:layout_centerInParent="true"
+            android:id="@+id/btn"
+            android:background="@drawable/b_play"
+     	/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="fill_parent"
+        android:layout_weight="50"
+        android:background="#FFFFFF" >
+        <Button
+     		android:id="@+id/button_id2"
+     		android:layout_height="150dp"
+     		android:layout_width="150dp"
+     		android:layout_below="@+id/view_pager"
+     		android:layout_centerInParent="true"
+     		android:background="@drawable/b_record"
+     	/>
+    </RelativeLayout>
+ </LinearLayout>
+
+</LinearLayout>
