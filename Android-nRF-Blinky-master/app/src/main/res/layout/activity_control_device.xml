@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2015, Nordic Semiconductor
+  ~ All rights reserved.
+  ~
+  ~ Redistribution and use in source and binary forms, with or without
+  ~ modification, are permitted provided that the following conditions are met:
+  ~
+  ~ * Redistributions of source code must retain the above copyright notice, this
+  ~   list of conditions and the following disclaimer.
+  ~
+  ~ * Redistributions in binary form must reproduce the above copyright notice,
+  ~   this list of conditions and the following disclaimer in the documentation
+  ~   and/or other materials provided with the distribution.
+  ~
+  ~ * Neither the name of copyright holder nor the names of its
+  ~   contributors may be used to endorse or promote products derived from
+  ~   this software without specific prior written permission.
+  ~
+  ~ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  ~ AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  ~ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  ~ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+  ~ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  ~ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  ~ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  ~ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  ~ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  ~ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  -->
+
+<RelativeLayout
+	android:id="@+id/relative_layout_control"
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	tools:context=".MainActivity">
+
+	<android.support.design.widget.AppBarLayout
+		android:id="@+id/appbar_layout"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:theme="@style/AppTheme.Base">
+
+		<android.support.v7.widget.Toolbar
+			android:id="@+id/toolbar"
+			android:layout_width="match_parent"
+			android:layout_height="?attr/actionBarSize"
+			android:background="?attr/colorPrimary"
+			app:popupTheme="@style/AppTheme.Base"/>
+
+	</android.support.design.widget.AppBarLayout>
+
+	<View
+		android:id="@+id/background_view"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:layout_alignParentBottom="true"
+		android:layout_alignParentStart="true"
+		android:background="@color/background_green"
+		android:visibility="invisible"/>
+
+	<View
+		android:id="@+id/background_view2"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:layout_alignParentBottom="true"
+		android:layout_alignParentStart="true"
+		android:background="@color/background_red"
+		android:visibility="invisible"/>
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:layout_below="@id/appbar_layout"
+		android:weightSum="100"
+		android:orientation="vertical">
+
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="0dp"
+			android:layout_weight="0.25"/>
+
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="0dp"
+			android:layout_weight="35"
+			android:weightSum="100"
+			android:orientation="horizontal"
+			android:gravity="center">
+
+			<LinearLayout
+				android:layout_width="0dip"
+				android:layout_height="match_parent"
+				android:layout_weight="95"
+				android:gravity="center"><!--
+				android:background="@layout/layout_bg">-->
+
+				<ImageView
+					android:id="@+id/img_bulb"
+					android:layout_width="wrap_content"
+					android:layout_height="match_parent"
+					android:contentDescription="@string/todo"
+					android:scaleType="centerInside"
+					android:src="@drawable/bulb_off"
+					android:layout_marginTop="10dip"
+					android:layout_marginBottom="10dip"/>
+
+				<ImageView
+					android:id="@+id/img_bulb2"
+					android:layout_width="wrap_content"
+					android:layout_height="match_parent"
+					android:contentDescription="@string/todo"
+					android:scaleType="centerInside"
+					android:src="@drawable/bulb_off"
+					android:layout_marginTop="10dip"
+					android:layout_marginBottom="10dip"/>
+
+			</LinearLayout>
+
+		</LinearLayout>
+
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="0dp"
+			android:layout_weight="0.25"/>
+
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="0dp"
+			android:layout_weight="36"
+			android:weightSum="100"
+			android:orientation="horizontal"
+			android:gravity="center">
+
+			<LinearLayout
+				android:layout_width="0dip"
+				android:layout_height="match_parent"
+				android:layout_weight="95"
+				android:orientation="vertical"
+				android:weightSum="90"
+				android:background="@layout/layout_bg">
+
+				<LinearLayout
+					android:layout_width="match_parent"
+					android:layout_height="0dip"
+					android:layout_weight="30">
+
+					<RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+						android:id="@+id/radio_group"
+						android:layout_width="match_parent"
+						android:layout_height="match_parent"
+						android:orientation="horizontal"
+						android:layout_marginLeft="7dip">
+
+						<RadioButton
+							android:id="@+id/radio_ninjas"
+							android:layout_width="wrap_content"
+							android:layout_height="match_parent"
+							android:text="always" />
+
+						<RadioButton
+							android:id="@+id/radio_pirates"
+							android:layout_width="wrap_content"
+							android:layout_height="match_parent"
+							android:layout_marginLeft="15dip"
+							android:text="time" />
+
+						<EditText
+							android:id="@+id/editText"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_marginLeft="15dip"
+							android:hint="1.0               "
+							android:inputType="numberDecimal"
+							android:maxWidth="90dip"/>
+
+						<TextView
+							android:id="@+id/textView"
+							android:layout_width="wrap_content"
+							android:layout_height="match_parent"
+							android:text="h"
+							android:gravity="center"/>
+
+					</RadioGroup>
+				</LinearLayout>
+
+				<LinearLayout
+					android:layout_width="match_parent"
+					android:layout_height="0dip"
+					android:layout_weight="30"
+					android:orientation="horizontal">
+
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="match_parent"
+						android:text="Record for"
+						android:gravity="center"
+						android:layout_marginLeft="15dip"/>
+
+					<Spinner
+						android:id="@+id/spinner"
+						android:layout_width="wrap_content"
+						android:layout_height="match_parent"
+						android:drawSelectorOnTop="true"
+						android:dropDownWidth="50dip"/>
+
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="match_parent"
+						android:text="h"
+						android:gravity="center"/>
+
+					<Spinner
+						android:id="@+id/spinner2"
+						android:layout_width="wrap_content"
+						android:layout_height="match_parent"
+						android:drawSelectorOnTop="true"
+						android:dropDownWidth="50dip"/>
+
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="match_parent"
+						android:text="min"
+						android:gravity="center"/>
+
+				</LinearLayout>
+
+				<LinearLayout
+					android:layout_width="match_parent"
+					android:layout_height="0dip"
+					android:layout_weight="30"
+					android:orientation="horizontal">
+
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="match_parent"
+						android:text="Pause for"
+						android:gravity="center"
+						android:layout_marginLeft="15dip"/>
+
+					<Spinner
+						android:id="@+id/spinner3"
+						android:layout_width="wrap_content"
+						android:layout_height="match_parent"
+						android:drawSelectorOnTop="true"
+						android:layout_marginLeft="5dip"
+						android:dropDownWidth="50dip"/>
+
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="match_parent"
+						android:text="h"
+						android:gravity="center"/>
+
+					<Spinner
+						android:id="@+id/spinner4"
+						android:layout_width="wrap_content"
+						android:layout_height="match_parent"
+						android:drawSelectorOnTop="true"
+						android:dropDownWidth="50dip"/>
+
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="match_parent"
+						android:text="min"
+						android:gravity="center"/>
+
+				</LinearLayout>
+
+			</LinearLayout>
+
+		</LinearLayout>
+
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="0dp"
+			android:layout_weight="0.25"/>
+
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="0dp"
+			android:layout_weight="20"
+			android:orientation="horizontal"
+			android:weightSum="100"
+			android:gravity="center">
+
+			<LinearLayout
+				android:layout_width="0dip"
+				android:layout_height="match_parent"
+				android:layout_weight="95"
+				android:orientation="horizontal"
+				android:weightSum="100">
+
+				<LinearLayout
+					android:id="@+id/linearlayout_button"
+					android:layout_width="0dip"
+					android:layout_height="match_parent"
+					android:layout_weight="50"
+					android:gravity="center">
+
+					<Button
+						android:id="@+id/button_blinky"
+						android:layout_width="250dip"
+						android:layout_height="match_parent"
+						android:adjustViewBounds="true"
+						android:background="@layout/button2"
+						android:orientation="horizontal"
+						android:scaleType="fitCenter"/>
+
+				</LinearLayout>
+
+				<LinearLayout
+					android:layout_width="0dip"
+					android:layout_height="match_parent"
+					android:layout_weight="50"
+					android:gravity="center">
+
+					<Button
+						android:id="@+id/button_switch"
+						android:layout_width="250dip"
+						android:layout_height="match_parent"
+						android:layout_marginStart="0dip"
+						android:background="@layout/button3"
+						android:gravity="center"
+						android:orientation="horizontal" />
+
+				</LinearLayout>
+
+			</LinearLayout>
+
+		</LinearLayout>
+
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="0dp"
+			android:layout_weight="0.25"/>
+
+		<RelativeLayout
+			android:layout_width="match_parent"
+			android:layout_height="0dp"
+			android:layout_weight="8">
+
+			<Button
+				android:id="@+id/action_connect"
+				style="@style/Widget.Connect"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="15dp"
+				android:text="@string/action_connect"
+				android:layout_centerInParent="true"/>
+
+		</RelativeLayout>
+
+	</LinearLayout>
+
+</RelativeLayout>
