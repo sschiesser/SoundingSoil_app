@@ -133,8 +133,9 @@
 			android:layout_weight="36"
 			android:weightSum="100"
 			android:orientation="horizontal"
-			android:gravity="center">
-
+			android:gravity="center"
+			android:id="@+id/wave">
+			<!--
 			<LinearLayout
 				android:layout_width="0dip"
 				android:layout_height="match_parent"
@@ -271,6 +272,19 @@
 				</LinearLayout>
 
 			</LinearLayout>
+
+			-->
+
+			<ak.sh.ay.musicwave.MusicWave
+				android:id="@+id/musicWave"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:layout_marginLeft="10dp"
+				android:layout_marginRight="10dp"
+				app:colorGradient="true"
+				app:endColor="#be0000"
+				app:startColor="#12af00"
+				app:waveThickness="4" />
 
 		</LinearLayout>
 

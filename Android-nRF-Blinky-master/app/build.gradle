@@ -30,4 +30,6 @@ dependencies {
     compile 'no.nordicsemi.android.support.v18:scanner:0.1.1'
     // Visualizer
     compile 'com.chibde:audiovisualizer:2.0.1'
+    //Music Wave
+    compile 'com.fxn769:musicwave:1.0'
 }

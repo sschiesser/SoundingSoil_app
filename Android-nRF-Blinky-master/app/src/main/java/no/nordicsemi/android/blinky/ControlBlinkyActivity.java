@@ -30,38 +30,37 @@
 
 package no.nordicsemi.android.blinky;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.graphics.drawable.Animatable;
+import android.content.pm.PackageManager;
+import android.media.MediaPlayer;
+import android.media.audiofx.Visualizer;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.InputFilter;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.view.ViewTreeObserver;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
-import android.widget.RadioGroup;
-import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.Spinner;
-import android.widget.ArrayAdapter;
-import android.widget.AdapterView;
-import android.widget.TextView;
 import android.os.Handler;
-import android.graphics.drawable.Drawable;
+import android.support.design.widget.FloatingActionButton;
 
+import ak.sh.ay.musicwave.MusicWave;
 import no.nordicsemi.android.blinky.profile.BleProfileService;
 import no.nordicsemi.android.blinky.service.BlinkyService;
 
@@ -75,11 +74,18 @@ public class ControlBlinkyActivity extends AppCompatActivity{
 	private View mBackgroundView;
 	private View mBackgroundView2;
 	private LinearLayout LinearLayout;
+	private LinearLayout LinearLayoutWave;
 	private int height;
 	private Spinner spinner;
 	private Spinner spinner2;
 	private Spinner spinner3;
 	private Spinner spinner4;
+
+	private MusicWave musicWave;
+	private MediaPlayer mMediaPlayer;
+	private Visualizer mVisualizer;
+	private boolean mMediaPlayerMute = true;
+
 	private boolean mActionOnOff2_b = false;
 	private boolean mActionOnOff_b = false;
 	private static final Integer[]stunden = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
@@ -135,7 +141,7 @@ public class ControlBlinkyActivity extends AppCompatActivity{
 		mBackgroundView = findViewById(R.id.background_view);
 		mBackgroundView2 = findViewById(R.id.background_view2);
 		mParentView = findViewById(R.id.relative_layout_control);
-		LinearLayout = findViewById(R.id.linearlayout_button);
+		LinearLayout = (android.widget.LinearLayout) findViewById(R.id.linearlayout_button);
 
 		mActionOnOff2.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -209,7 +215,7 @@ public class ControlBlinkyActivity extends AppCompatActivity{
 				mActionOnOff2.setLayoutParams(params2);
 			}
 		});
-
+		/*
 		final EditText et1 = (EditText) findViewById(R.id.editText);
 		et1.setFilters(new InputFilter[]{ new InputFilterMinMax("1", "200")});
 		final TextView tv1 = (TextView) findViewById(R.id.textView);
@@ -321,8 +327,59 @@ public class ControlBlinkyActivity extends AppCompatActivity{
 			public void onNothingSelected(AdapterView<?> parent) {
 			}
 		});
+		*//* Permission
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 9976);
+		} else {
+			initialise();
+		}*/
+
+		musicWave = (MusicWave) findViewById(R.id.musicWave);
+		mMediaPlayer = MediaPlayer.create(this, R.raw.you_music);
+		prepareVisualizer();
+		mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+			@Override
+			public void onCompletion(MediaPlayer mediaPlayer) {
+				mVisualizer.setEnabled(true);
+				mMediaPlayer.start();
+			}
+		});
+		mVisualizer.setEnabled(true);
+		mMediaPlayer.start();
+
+		LinearLayoutWave = (android.widget.LinearLayout) findViewById(R.id.wave);
+		LinearLayoutWave.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				if(mMediaPlayerMute) {
+					mMediaPlayer.setVolume(0, 0);
+					mMediaPlayerMute = false;
+				}else{
+					mMediaPlayer.setVolume(1,1);
+					mMediaPlayerMute = true;
+				}
+			}
+		});
 
 	}
+
+	private void prepareVisualizer() {
+		mVisualizer = new Visualizer(mMediaPlayer.getAudioSessionId());
+		mVisualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[1]);
+		mVisualizer.setDataCaptureListener(
+				new Visualizer.OnDataCaptureListener() {
+					public void onWaveFormDataCapture(Visualizer visualizer,
+													  byte[] bytes, int samplingRate) {
+						musicWave.updateVisualizer(bytes);
+					}
+
+					public void onFftDataCapture(Visualizer visualizer,
+												 byte[] bytes, int samplingRate) {
+					}
+				}, Visualizer.getMaxCaptureRate() / 2, true, false);
+		mVisualizer.setEnabled(true);
+	}
+
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
