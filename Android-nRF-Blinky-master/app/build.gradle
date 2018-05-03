@@ -32,4 +32,6 @@ dependencies {
     compile 'com.chibde:audiovisualizer:2.0.1'
     //Music Wave
     compile 'com.fxn769:musicwave:1.0'
+    //Time Picker
+    compile 'com.code-troopers.betterpickers:library:3.1.0'
 }

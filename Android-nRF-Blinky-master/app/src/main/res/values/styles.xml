@@ -53,4 +53,22 @@
 		<item name="android:paddingRight">40dp</item>
 
 	</style>
+
+	<style name="RadialPicker" parent="BetterPickersRadialTimePickerDialog.PrimaryColor">
+		<item name="bpPreHeaderBackgroundColor">@android:color/white</item>
+		<item name="bpHeaderBackgroundColor">@android:color/white</item>
+		<item name="bpHeaderSelectedTextColor">@android:color/holo_blue_light</item>
+		<item name="bpHeaderUnselectedTextColor">@android:color/darker_gray</item>
+
+		<item name="bpBodyBackgroundColor">#f2f2f2</item>
+		<item name="bpBodySelectedTextColor">@android:color/white</item>
+		<item name="bpBodyUnselectedTextColor">@android:color/darker_gray</item>
+
+		<item name="bpRadialBackgroundColor">@android:color/white</item>
+		<item name="bpRadialTextColor">@android:color/darker_gray</item>
+		<item name="bpRadialPointerColor">@android:color/holo_blue_light</item>
+
+		<item name="bpButtonsBackgroundColor">@color/white</item>
+		<item name="bpButtonsTextColor">@android:color/darker_gray</item>
+	</style>
 </resources>

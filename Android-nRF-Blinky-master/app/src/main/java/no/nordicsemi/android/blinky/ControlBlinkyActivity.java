@@ -31,6 +31,7 @@
 package no.nordicsemi.android.blinky;
 
 import android.Manifest;
+import android.app.DialogFragment;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -39,6 +40,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
+import android.media.MediaRecorder;
 import android.media.audiofx.Visualizer;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -48,23 +50,36 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.InputFilter;
+import android.text.InputType;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.view.ViewTreeObserver;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
+import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
+import android.widget.TextView;
+
+import com.codetroopers.betterpickers.radialtimepicker.RadialTimePickerDialogFragment;
 
 import ak.sh.ay.musicwave.MusicWave;
 import no.nordicsemi.android.blinky.profile.BleProfileService;
 import no.nordicsemi.android.blinky.service.BlinkyService;
 
-public class ControlBlinkyActivity extends AppCompatActivity{
+import com.codetroopers.betterpickers.*;
+
+import org.w3c.dom.Text;
+
+public class ControlBlinkyActivity extends AppCompatActivity implements RadialTimePickerDialogFragment.OnTimeSetListener{
 
 	private BlinkyService.BlinkyBinder mBlinkyDevice;
 	private Button mActionOnOff, mActionConnect, mActionOnOff2;
@@ -76,23 +91,21 @@ public class ControlBlinkyActivity extends AppCompatActivity{
 	private LinearLayout LinearLayout;
 	private LinearLayout LinearLayoutWave;
 	private int height;
-	private Spinner spinner;
-	private Spinner spinner2;
 	private Spinner spinner3;
 	private Spinner spinner4;
+	private TextView recordfor;
+	private TextView pausefor;
 
 	private MusicWave musicWave;
 	private MediaPlayer mMediaPlayer;
 	private Visualizer mVisualizer;
-	private boolean mMediaPlayerMute = true;
+	private boolean mMediaPlayerMute = false;
 
 	private boolean mActionOnOff2_b = false;
 	private boolean mActionOnOff_b = false;
-	private static final Integer[]stunden = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
-	private static final Integer[]minuten = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-		25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59};
 	public boolean bulb = false;
 	public boolean bulb2 = false;
+	public boolean timepicker = true;
 
 	private ServiceConnection mServiceConnection = new ServiceConnection() {
 		@Override
@@ -136,8 +149,8 @@ public class ControlBlinkyActivity extends AppCompatActivity{
 		mActionOnOff = (Button) findViewById(R.id.button_blinky);
 		mActionOnOff2 = (Button) findViewById(R.id.button_switch);
 		mActionConnect = (Button) findViewById(R.id.action_connect);
-		mImageBulb = (ImageView) findViewById(R.id.img_bulb);
-		mImageBulb2 = (ImageView) findViewById(R.id.img_bulb2);
+		//mImageBulb = (ImageView) findViewById(R.id.img_bulb);
+		//mImageBulb2 = (ImageView) findViewById(R.id.img_bulb2);
 		mBackgroundView = findViewById(R.id.background_view);
 		mBackgroundView2 = findViewById(R.id.background_view2);
 		mParentView = findViewById(R.id.relative_layout_control);
@@ -205,7 +218,7 @@ public class ControlBlinkyActivity extends AppCompatActivity{
 				android.view.ViewGroup.LayoutParams params1 = mActionOnOff.getLayoutParams();
 				android.view.ViewGroup.LayoutParams params2 = mActionOnOff2.getLayoutParams();
 
-				height*=0.7;
+				height*=0.75;
 				params1.height = height;
 				params1.width = height;
 				params2.height = height;
@@ -215,119 +228,34 @@ public class ControlBlinkyActivity extends AppCompatActivity{
 				mActionOnOff2.setLayoutParams(params2);
 			}
 		});
-		/*
+
 		final EditText et1 = (EditText) findViewById(R.id.editText);
-		et1.setFilters(new InputFilter[]{ new InputFilterMinMax("1", "200")});
+		//et1.setFilters(new InputFilter[]{ new InputFilterMinMax("1", "200")});
 		final TextView tv1 = (TextView) findViewById(R.id.textView);
 
 		RadioGroup radioGroup = (RadioGroup) findViewById(R.id.radio_group);
-		radioGroup.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+		radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(RadioGroup group, int checkedId) {
 				if (checkedId == R.id.radio_pirates) {
-					et1.setVisibility(View.VISIBLE);
+					et1.setEnabled(true);
+					tv1.setText("hours");
 					tv1.setVisibility(View.VISIBLE);
-				} else {
-					et1.setVisibility(View.INVISIBLE);
-					tv1.setVisibility(View.INVISIBLE);
+					et1.setInputType(InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_CLASS_NUMBER);
+					et1.setText("");
+				} else if (checkedId == R.id.radio_warriors){
+					et1.setEnabled(true);
+					tv1.setText("times");
+					tv1.setVisibility(View.VISIBLE);
+					et1.setInputType(InputType.TYPE_CLASS_NUMBER);
+					et1.setText("");
+				} else if (checkedId == R.id.radio_ninjas) {
+					et1.setEnabled(false);
 				}
 			}
 		});
 
-		spinner = (Spinner) findViewById(R.id.spinner);
-		ArrayAdapter<Integer> adapter_stunden = new ArrayAdapter<Integer>(ControlBlinkyActivity.this,
-				android.R.layout.simple_spinner_item, stunden);
-
-		adapter_stunden.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		spinner.setAdapter(adapter_stunden);
-		spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-			@Override
-			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-
-				switch (position) {
-					case 0:
-						break;
-					case 1:
-						break;
-					case 2:
-						break;
-				}
-			}
-
-			@Override
-			public void onNothingSelected(AdapterView<?> parent) {
-			}
-		});
-
-		spinner2 = (Spinner) findViewById(R.id.spinner2);
-		ArrayAdapter<Integer> adapter_minuten = new ArrayAdapter<Integer>(ControlBlinkyActivity.this,
-				android.R.layout.simple_spinner_item, minuten);
-
-		adapter_minuten.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		spinner2.setAdapter(adapter_minuten);
-		spinner2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-			@Override
-			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-
-				switch (position) {
-					case 0:
-						break;
-					case 1:
-						break;
-					case 2:
-						break;
-				}
-			}
-
-			@Override
-			public void onNothingSelected(AdapterView<?> parent) {
-			}
-		});
-
-		spinner3 = (Spinner) findViewById(R.id.spinner3);
-		adapter_stunden.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		spinner3.setAdapter(adapter_stunden);
-		spinner3.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-			@Override
-			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-
-				switch (position) {
-					case 0:
-						break;
-					case 1:
-						break;
-					case 2:
-						break;
-				}
-			}
-
-			@Override
-			public void onNothingSelected(AdapterView<?> parent) {
-			}
-		});
-
-		spinner4 = (Spinner) findViewById(R.id.spinner4);
-		adapter_minuten.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		spinner4.setAdapter(adapter_minuten);
-		spinner4.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-			@Override
-			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-
-				switch (position) {
-					case 0:
-						break;
-					case 1:
-						break;
-					case 2:
-						break;
-				}
-			}
-
-			@Override
-			public void onNothingSelected(AdapterView<?> parent) {
-			}
-		});
-		*//* Permission
+		/* Permission
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
 			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 9976);
 		} else {
@@ -335,7 +263,7 @@ public class ControlBlinkyActivity extends AppCompatActivity{
 		}*/
 
 		musicWave = (MusicWave) findViewById(R.id.musicWave);
-		mMediaPlayer = MediaPlayer.create(this, R.raw.you_music);
+		mMediaPlayer = MediaPlayer.create(this, R.raw.music_example);
 		prepareVisualizer();
 		mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
 			@Override
@@ -346,6 +274,7 @@ public class ControlBlinkyActivity extends AppCompatActivity{
 		});
 		mVisualizer.setEnabled(true);
 		mMediaPlayer.start();
+		mMediaPlayer.setVolume(0,0);
 
 		LinearLayoutWave = (android.widget.LinearLayout) findViewById(R.id.wave);
 		LinearLayoutWave.setOnClickListener(new View.OnClickListener() {
@@ -361,6 +290,39 @@ public class ControlBlinkyActivity extends AppCompatActivity{
 			}
 		});
 
+		recordfor = (TextView) findViewById(R.id.RecordFor);
+
+		recordfor.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				RadialTimePickerDialogFragment rtpd = new RadialTimePickerDialogFragment()
+						.setOnTimeSetListener(ControlBlinkyActivity.this)
+						.setStartTime(10, 10)
+						.setDoneText("Done")
+						.setCancelText("Cancel")
+				        .setThemeCustom(R.style.RadialPicker);
+				rtpd.show(getSupportFragmentManager(), "timePickerDialogFragment");
+
+				timepicker = true;
+			}
+		});
+
+        pausefor = (TextView) findViewById(R.id.PauseFor);
+
+        pausefor.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                RadialTimePickerDialogFragment rtpd = new RadialTimePickerDialogFragment()
+                        .setOnTimeSetListener(ControlBlinkyActivity.this)
+                        .setStartTime(10, 10)
+                        .setDoneText("Done")
+                        .setCancelText("Cancel")
+                        .setThemeCustom(R.style.RadialPicker);
+                rtpd.show(getSupportFragmentManager(), "timePickerDialogFragment");
+
+                timepicker = false;
+            }
+        });
 	}
 
 	private void prepareVisualizer() {
@@ -517,4 +479,18 @@ public class ControlBlinkyActivity extends AppCompatActivity{
 	private void showError(final String error) {
 		Snackbar.make(mParentView, error, Snackbar.LENGTH_LONG).show();
 	}
+
+    @Override
+    public void onTimeSet(RadialTimePickerDialogFragment dialog, int hourOfDay, int minute) {
+        // Time Picked
+
+        String formattedhour = String.format("%02d", hourOfDay);
+        String formattedminute = String.format("%02d", minute);
+
+        if(timepicker) {
+            recordfor.setText(formattedhour + ":" + formattedminute);
+        }else{
+            pausefor.setText(formattedhour + ":" + formattedminute);
+        }
+    }
 }

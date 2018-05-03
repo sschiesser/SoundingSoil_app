@@ -81,12 +81,12 @@
 		<LinearLayout
 			android:layout_width="match_parent"
 			android:layout_height="0dp"
-			android:layout_weight="0.25"/>
+			android:layout_weight="2"/>
 
 		<LinearLayout
 			android:layout_width="match_parent"
 			android:layout_height="0dp"
-			android:layout_weight="35"
+			android:layout_weight="33.25"
 			android:weightSum="100"
 			android:orientation="horizontal"
 			android:gravity="center">
@@ -95,9 +95,11 @@
 				android:layout_width="0dip"
 				android:layout_height="match_parent"
 				android:layout_weight="95"
-				android:gravity="center"><!--
+				android:gravity="center"
+				android:id="@+id/wave"
+				android:background="@layout/layout_bg"><!--
 				android:background="@layout/layout_bg">-->
-
+				<!--
 				<ImageView
 					android:id="@+id/img_bulb"
 					android:layout_width="wrap_content"
@@ -116,7 +118,18 @@
 					android:scaleType="centerInside"
 					android:src="@drawable/bulb_off"
 					android:layout_marginTop="10dip"
-					android:layout_marginBottom="10dip"/>
+					android:layout_marginBottom="10dip"/>-->
+
+				<ak.sh.ay.musicwave.MusicWave
+					android:id="@+id/musicWave"
+					android:layout_width="match_parent"
+					android:layout_height="match_parent"
+					android:layout_marginLeft="15dp"
+					android:layout_marginRight="15dp"
+					app:colorGradient="true"
+					app:endColor="#be0000"
+					app:startColor="#12af00"
+					app:waveThickness="4" />
 
 			</LinearLayout>
 
@@ -125,166 +138,127 @@
 		<LinearLayout
 			android:layout_width="match_parent"
 			android:layout_height="0dp"
-			android:layout_weight="0.25"/>
+			android:layout_weight="2"/>
 
 		<LinearLayout
 			android:layout_width="match_parent"
 			android:layout_height="0dp"
-			android:layout_weight="36"
+			android:layout_weight="34.25"
 			android:weightSum="100"
 			android:orientation="horizontal"
-			android:gravity="center"
-			android:id="@+id/wave">
-			<!--
+			android:gravity="center">
+
 			<LinearLayout
 				android:layout_width="0dip"
 				android:layout_height="match_parent"
 				android:layout_weight="95"
 				android:orientation="vertical"
-				android:weightSum="90"
+				android:weightSum="100"
 				android:background="@layout/layout_bg">
 
 				<LinearLayout
 					android:layout_width="match_parent"
 					android:layout_height="0dip"
-					android:layout_weight="30">
+					android:layout_weight="25">
 
 					<RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
 						android:id="@+id/radio_group"
 						android:layout_width="match_parent"
 						android:layout_height="match_parent"
 						android:orientation="horizontal"
-						android:layout_marginLeft="7dip">
+						android:gravity="center_horizontal">
 
 						<RadioButton
 							android:id="@+id/radio_ninjas"
 							android:layout_width="wrap_content"
 							android:layout_height="match_parent"
-							android:text="always" />
+							android:text="Always" />
 
 						<RadioButton
 							android:id="@+id/radio_pirates"
 							android:layout_width="wrap_content"
 							android:layout_height="match_parent"
 							android:layout_marginLeft="15dip"
-							android:text="time" />
+							android:text="Time" />
 
-						<EditText
-							android:id="@+id/editText"
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:layout_marginLeft="15dip"
-							android:hint="1.0               "
-							android:inputType="numberDecimal"
-							android:maxWidth="90dip"/>
-
-						<TextView
-							android:id="@+id/textView"
+						<RadioButton
+							android:id="@+id/radio_warriors"
 							android:layout_width="wrap_content"
 							android:layout_height="match_parent"
-							android:text="h"
-							android:gravity="center"/>
+							android:layout_marginLeft="15dip"
+							android:text="Repeat" />
 
 					</RadioGroup>
+
 				</LinearLayout>
 
 				<LinearLayout
 					android:layout_width="match_parent"
 					android:layout_height="0dip"
-					android:layout_weight="30"
-					android:orientation="horizontal">
+					android:layout_weight="25"
+					android:gravity="center_horizontal">
+
+					<EditText
+						android:id="@+id/editText"
+						android:layout_width="wrap_content"
+						android:layout_height="match_parent"
+						android:hint="1.5               "
+						android:inputType="numberDecimal"
+						android:maxLength="5"
+						android:maxWidth="90dip"/>
+
+					<TextView
+						android:id="@+id/textView"
+						android:layout_width="wrap_content"
+						android:layout_height="match_parent"
+						android:text="hours"
+						android:gravity="center"/>
+
+				</LinearLayout>
+
+				<LinearLayout
+					android:layout_width="match_parent"
+					android:layout_height="0dip"
+					android:layout_weight="50"
+					android:orientation="horizontal"
+					android:gravity="center_horizontal">
 
 					<TextView
 						android:layout_width="wrap_content"
 						android:layout_height="match_parent"
 						android:text="Record for"
 						android:gravity="center"
-						android:layout_marginLeft="15dip"/>
-
-					<Spinner
-						android:id="@+id/spinner"
-						android:layout_width="wrap_content"
-						android:layout_height="match_parent"
-						android:drawSelectorOnTop="true"
-						android:dropDownWidth="50dip"/>
+						android:id="@+id/tvrf"/>
 
 					<TextView
 						android:layout_width="wrap_content"
 						android:layout_height="match_parent"
-						android:text="h"
-						android:gravity="center"/>
-
-					<Spinner
-						android:id="@+id/spinner2"
-						android:layout_width="wrap_content"
-						android:layout_height="match_parent"
-						android:drawSelectorOnTop="true"
-						android:dropDownWidth="50dip"/>
-
-					<TextView
-						android:layout_width="wrap_content"
-						android:layout_height="match_parent"
-						android:text="min"
-						android:gravity="center"/>
-
-				</LinearLayout>
-
-				<LinearLayout
-					android:layout_width="match_parent"
-					android:layout_height="0dip"
-					android:layout_weight="30"
-					android:orientation="horizontal">
+						android:text="10:10"
+						android:id="@+id/RecordFor"
+						android:gravity="center"
+						android:layout_marginLeft="15dip"
+						android:textColor="@android:color/black"/>
 
 					<TextView
 						android:layout_width="wrap_content"
 						android:layout_height="match_parent"
 						android:text="Pause for"
 						android:gravity="center"
+						android:id="@+id/tvpf"
 						android:layout_marginLeft="15dip"/>
 
-					<Spinner
-						android:id="@+id/spinner3"
-						android:layout_width="wrap_content"
-						android:layout_height="match_parent"
-						android:drawSelectorOnTop="true"
-						android:layout_marginLeft="5dip"
-						android:dropDownWidth="50dip"/>
-
 					<TextView
 						android:layout_width="wrap_content"
 						android:layout_height="match_parent"
-						android:text="h"
-						android:gravity="center"/>
-
-					<Spinner
-						android:id="@+id/spinner4"
-						android:layout_width="wrap_content"
-						android:layout_height="match_parent"
-						android:drawSelectorOnTop="true"
-						android:dropDownWidth="50dip"/>
-
-					<TextView
-						android:layout_width="wrap_content"
-						android:layout_height="match_parent"
-						android:text="min"
-						android:gravity="center"/>
+						android:text="10:10"
+						android:id="@+id/PauseFor"
+						android:gravity="center"
+						android:layout_marginLeft="15dip"
+						android:textColor="@android:color/black"/>
 
 				</LinearLayout>
 
 			</LinearLayout>
-
-			-->
-
-			<ak.sh.ay.musicwave.MusicWave
-				android:id="@+id/musicWave"
-				android:layout_width="match_parent"
-				android:layout_height="match_parent"
-				android:layout_marginLeft="10dp"
-				android:layout_marginRight="10dp"
-				app:colorGradient="true"
-				app:endColor="#be0000"
-				app:startColor="#12af00"
-				app:waveThickness="4" />
 
 		</LinearLayout>
 
