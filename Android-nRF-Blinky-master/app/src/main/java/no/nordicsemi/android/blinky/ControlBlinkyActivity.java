@@ -149,8 +149,8 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 		mActionOnOff = (Button) findViewById(R.id.button_blinky);
 		mActionOnOff2 = (Button) findViewById(R.id.button_switch);
 		mActionConnect = (Button) findViewById(R.id.action_connect);
-		//mImageBulb = (ImageView) findViewById(R.id.img_bulb);
-		//mImageBulb2 = (ImageView) findViewById(R.id.img_bulb2);
+		mImageBulb = (ImageView) findViewById(R.id.img_bulb);
+		mImageBulb2 = (ImageView) findViewById(R.id.img_bulb2);
 		mBackgroundView = findViewById(R.id.background_view);
 		mBackgroundView2 = findViewById(R.id.background_view2);
 		mParentView = findViewById(R.id.relative_layout_control);
@@ -261,7 +261,7 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 		} else {
 			initialise();
 		}*/
-
+		/*
 		musicWave = (MusicWave) findViewById(R.id.musicWave);
 		mMediaPlayer = MediaPlayer.create(this, R.raw.music_example);
 		prepareVisualizer();
@@ -288,7 +288,7 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 					mMediaPlayerMute = true;
 				}
 			}
-		});
+		});*/
 
 		recordfor = (TextView) findViewById(R.id.RecordFor);
 

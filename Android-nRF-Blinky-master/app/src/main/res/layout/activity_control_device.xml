@@ -99,7 +99,7 @@
 				android:id="@+id/wave"
 				android:background="@layout/layout_bg"><!--
 				android:background="@layout/layout_bg">-->
-				<!--
+
 				<ImageView
 					android:id="@+id/img_bulb"
 					android:layout_width="wrap_content"
@@ -118,9 +118,9 @@
 					android:scaleType="centerInside"
 					android:src="@drawable/bulb_off"
 					android:layout_marginTop="10dip"
-					android:layout_marginBottom="10dip"/>-->
+					android:layout_marginBottom="10dip"/>
 
-				<ak.sh.ay.musicwave.MusicWave
+				<!--<ak.sh.ay.musicwave.MusicWave
 					android:id="@+id/musicWave"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent"
@@ -129,7 +129,7 @@
 					app:colorGradient="true"
 					app:endColor="#be0000"
 					app:startColor="#12af00"
-					app:waveThickness="4" />
+					app:waveThickness="4" />-->
 
 			</LinearLayout>
 
