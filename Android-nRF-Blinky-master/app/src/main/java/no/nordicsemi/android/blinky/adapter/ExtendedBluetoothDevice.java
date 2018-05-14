@@ -31,6 +31,7 @@
 package no.nordicsemi.android.blinky.adapter;
 
 import android.bluetooth.BluetoothDevice;
+import android.util.Log;
 
 import no.nordicsemi.android.support.v18.scanner.ScanResult;
 

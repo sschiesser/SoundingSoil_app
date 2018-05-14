@@ -41,6 +41,8 @@ import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
+import android.location.SettingInjectorService;
+import android.media.audiofx.Visualizer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -56,6 +58,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewDebug;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
@@ -96,7 +99,8 @@ public class MainActivity extends AppCompatActivity implements PermissionRationa
 	private static final long SCAN_PERIOD = 10000; // [ms]
 
 	/** LED Button Service UUID that's required in the device's Advertising packet to be shown. */
-	private final static String LBS_UUID_SERVICE = "00001523-1212-efde-1523-785feabcd123";
+	//private final static String LBS_UUID_SERVICE = "00001523-1212-efde-1523-785feabcd123";
+	private final static String LBS_UUID_SERVICE = "00001523-0000-1000-8000-00805f9b34fb";
 
 	private BluetoothLeScannerCompat mScanner;
 	private ArrayList<ScanFilter> scanFilterList;
@@ -375,6 +379,7 @@ public class MainActivity extends AppCompatActivity implements PermissionRationa
 
 		mScannerHandler.postDelayed(mStopScanningTask, SCAN_PERIOD);
 		mScanner.startScan(scanFilterList, settings, scanCallback);
+
 		mScanning = true;
 		invalidateOptionsMenu();
 	}
@@ -401,6 +406,7 @@ public class MainActivity extends AppCompatActivity implements PermissionRationa
 
 		@Override
 		public void onBatchScanResults(final List<ScanResult> results) {
+			Log.d("YEAH", "IN" + results);
 			boolean newDeviceFound = false;
 			for (final ScanResult result : results) {
 				if (!mBleDeviceListAdapter.hasDevice(result)) {

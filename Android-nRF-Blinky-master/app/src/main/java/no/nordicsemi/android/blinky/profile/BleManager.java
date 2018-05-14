@@ -88,6 +88,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> {
 			final int bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, -1);
 			final int previousBondState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, -1);
 
+			Log.d("YEAH", "DEVICE" + device);
+
 			// Skip other devices
 			if (mBluetoothGatt == null || !device.getAddress().equals(mBluetoothGatt.getDevice().getAddress()))
 				return;
@@ -111,6 +113,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> {
 		@Override
 		public void onReceive(final Context context, final Intent intent) {
 			final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+
+			Log.d("YEAH", "DEVICE" + device);
 
 			// Skip other devices
 			if (mBluetoothGatt == null || !device.getAddress().equals(mBluetoothGatt.getDevice().getAddress()))
@@ -625,7 +629,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> {
 
 		@Override
 		public final void onServicesDiscovered(final BluetoothGatt gatt, final int status) {
+			Log.d("YEAH", "DEVICE" + status);
 			if (status == BluetoothGatt.GATT_SUCCESS) {
+				Log.d("YEAH", "DEVICE" + gatt);
 				if (isRequiredServiceSupported(gatt)) {
 					final boolean optionalServicesFound = isOptionalServiceSupported(gatt);
 					// Notify the parent activity

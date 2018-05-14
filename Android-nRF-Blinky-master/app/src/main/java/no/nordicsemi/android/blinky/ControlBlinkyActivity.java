@@ -42,8 +42,11 @@ import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.media.audiofx.Visualizer;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -79,6 +82,14 @@ import com.codetroopers.betterpickers.*;
 
 import org.w3c.dom.Text;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Array;
+
 public class ControlBlinkyActivity extends AppCompatActivity implements RadialTimePickerDialogFragment.OnTimeSetListener{
 
 	private BlinkyService.BlinkyBinder mBlinkyDevice;
@@ -106,6 +117,8 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 	public boolean bulb = false;
 	public boolean bulb2 = false;
 	public boolean timepicker = true;
+
+	public File outputmediafile;
 
 	private ServiceConnection mServiceConnection = new ServiceConnection() {
 		@Override
@@ -229,6 +242,40 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 			}
 		});
 
+		recordfor = (TextView) findViewById(R.id.RecordFor);
+
+		recordfor.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				RadialTimePickerDialogFragment rtpd = new RadialTimePickerDialogFragment()
+						.setOnTimeSetListener(ControlBlinkyActivity.this)
+						.setStartTime(10, 10)
+						.setDoneText("Done")
+						.setCancelText("Cancel")
+						.setThemeCustom(R.style.RadialPicker);
+				rtpd.show(getSupportFragmentManager(), "timePickerDialogFragment");
+
+				timepicker = true;
+			}
+		});
+
+		pausefor = (TextView) findViewById(R.id.PauseFor);
+
+		pausefor.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				RadialTimePickerDialogFragment rtpd = new RadialTimePickerDialogFragment()
+						.setOnTimeSetListener(ControlBlinkyActivity.this)
+						.setStartTime(10, 10)
+						.setDoneText("Done")
+						.setCancelText("Cancel")
+						.setThemeCustom(R.style.RadialPicker);
+				rtpd.show(getSupportFragmentManager(), "timePickerDialogFragment");
+
+				timepicker = false;
+			}
+		});
+
 		final EditText et1 = (EditText) findViewById(R.id.editText);
 		//et1.setFilters(new InputFilter[]{ new InputFilterMinMax("1", "200")});
 		final TextView tv1 = (TextView) findViewById(R.id.textView);
@@ -243,14 +290,23 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 					tv1.setVisibility(View.VISIBLE);
 					et1.setInputType(InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_CLASS_NUMBER);
 					et1.setText("");
+					pausefor.setEnabled(true);
+					recordfor.setEnabled(true);
+					et1.setHint("1.5               ");
 				} else if (checkedId == R.id.radio_warriors){
 					et1.setEnabled(true);
 					tv1.setText("times");
 					tv1.setVisibility(View.VISIBLE);
 					et1.setInputType(InputType.TYPE_CLASS_NUMBER);
 					et1.setText("");
+					pausefor.setEnabled(true);
+					recordfor.setEnabled(true);
+					et1.setHint("1                  ");
 				} else if (checkedId == R.id.radio_ninjas) {
 					et1.setEnabled(false);
+					pausefor.setEnabled(false);
+					recordfor.setEnabled(false);
+                    et1.setHint("-                  ");
 				}
 			}
 		});
@@ -290,40 +346,34 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 			}
 		});*/
 
-		recordfor = (TextView) findViewById(R.id.RecordFor);
+		byte[] bytearray = {-1, 0, 42, -115, -45, 0, 14, -12, 1, -2, 1, -2, 1, -2};
 
-		recordfor.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				RadialTimePickerDialogFragment rtpd = new RadialTimePickerDialogFragment()
-						.setOnTimeSetListener(ControlBlinkyActivity.this)
-						.setStartTime(10, 10)
-						.setDoneText("Done")
-						.setCancelText("Cancel")
-				        .setThemeCustom(R.style.RadialPicker);
-				rtpd.show(getSupportFragmentManager(), "timePickerDialogFragment");
+        try {
+            File file = File.createTempFile("prefixx","suffixx");
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(bytearray);
 
-				timepicker = true;
-			}
-		});
+            final MediaPlayer m = new MediaPlayer();
+            m.setDataSource(String.valueOf(file));
+            m.start();
+            m.setVolume(1,1);
+            m.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mediaPlayer) {
+                    m.start();
+                    m.setVolume(1,1);
+                    Log.d("PRSTART", "START");
+                }
+            });
 
-        pausefor = (TextView) findViewById(R.id.PauseFor);
+            Log.d("PRSTART", "START");
 
-        pausefor.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                RadialTimePickerDialogFragment rtpd = new RadialTimePickerDialogFragment()
-                        .setOnTimeSetListener(ControlBlinkyActivity.this)
-                        .setStartTime(10, 10)
-                        .setDoneText("Done")
-                        .setCancelText("Cancel")
-                        .setThemeCustom(R.style.RadialPicker);
-                rtpd.show(getSupportFragmentManager(), "timePickerDialogFragment");
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.d("YEAH", "NOSTART");
+        }
 
-                timepicker = false;
-            }
-        });
-	}
+    }
 
 	private void prepareVisualizer() {
 		mVisualizer = new Visualizer(mMediaPlayer.getAudioSessionId());

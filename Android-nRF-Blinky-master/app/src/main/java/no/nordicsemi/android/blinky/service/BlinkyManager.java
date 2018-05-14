@@ -39,6 +39,7 @@ import no.nordicsemi.android.blinky.profile.BleManager;
 public class BlinkyManager extends BleManager<BlinkyManagerCallbacks> {
 	/** Nordic Blinky Service UUID */
 	private final static UUID LBS_UUID_SERVICE = UUID.fromString("00001523-1212-efde-1523-785feabcd123");
+	//private final static UUID LBS_UUID_SERVICE = UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
 	/** BUTTON characteristic UUID */
 	private final static UUID LBS_UUID_BUTTON_CHAR = UUID.fromString("00001524-1212-efde-1523-785feabcd123");
 	/** LED characteristic UUID LED 3*/
