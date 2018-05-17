@@ -1,6 +1,6 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_focused="true" android:state_pressed="false" android:drawable="@drawable/b_play" />
-    <item android:state_focused="true" android:state_pressed="true" android:drawable="@drawable/b_play_p" />
-    <item android:state_focused="false" android:state_pressed="true" android:drawable="@drawable/b_play_p" />
-    <item android:drawable="@drawable/b_play" />
+    <item android:state_focused="true" android:state_pressed="false" android:drawable="@drawable/b_play_1" />
+    <item android:state_focused="true" android:state_pressed="true" android:drawable="@drawable/b_stop_2" />
+    <item android:state_focused="false" android:state_pressed="true" android:drawable="@drawable/b_pause_3" />
+    <item android:drawable="@drawable/b_cancel_1" />
 </selector>

@@ -31,6 +31,7 @@
 package no.nordicsemi.android.blinky;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.DialogFragment;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -43,6 +44,7 @@ import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.media.audiofx.Visualizer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
@@ -57,6 +59,7 @@ import android.text.InputFilter;
 import android.text.InputType;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -89,6 +92,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ControlBlinkyActivity extends AppCompatActivity implements RadialTimePickerDialogFragment.OnTimeSetListener{
 
@@ -117,6 +122,7 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 	public boolean bulb = false;
 	public boolean bulb2 = false;
 	public boolean timepicker = true;
+	List<String> permissions = new ArrayList<String>();
 
 	public File outputmediafile;
 
@@ -145,6 +151,7 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 		}
 	};
 
+	@SuppressLint("ClickableViewAccessibility")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -162,8 +169,8 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 		mActionOnOff = (Button) findViewById(R.id.button_blinky);
 		mActionOnOff2 = (Button) findViewById(R.id.button_switch);
 		mActionConnect = (Button) findViewById(R.id.action_connect);
-		mImageBulb = (ImageView) findViewById(R.id.img_bulb);
-		mImageBulb2 = (ImageView) findViewById(R.id.img_bulb2);
+		//mImageBulb = (ImageView) findViewById(R.id.img_bulb);
+		//mImageBulb2 = (ImageView) findViewById(R.id.img_bulb2);
 		mBackgroundView = findViewById(R.id.background_view);
 		mBackgroundView2 = findViewById(R.id.background_view2);
 		mParentView = findViewById(R.id.relative_layout_control);
@@ -186,6 +193,18 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 			}
 		});
 
+		mActionOnOff2.setOnTouchListener(new View.OnTouchListener() {
+			@Override
+			public boolean onTouch(View view, MotionEvent motionEvent) {
+				if(mActionOnOff2_b){
+					mActionOnOff2.setBackgroundResource(R.drawable.b_pause_4);
+				} else {
+					mActionOnOff2.setBackgroundResource(R.drawable.b_play_2);
+				}
+				return false;
+			}
+		});
+
 		mActionOnOff.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -200,6 +219,18 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 				} else {
 					showError(getString(R.string.please_connect));
 				}
+			}
+		});
+
+		mActionOnOff.setOnTouchListener(new View.OnTouchListener() {
+			@Override
+			public boolean onTouch(View view, MotionEvent motionEvent) {
+				if(mActionOnOff_b){
+					mActionOnOff.setBackgroundResource(R.drawable.b_cancel_2);
+				} else {
+					mActionOnOff.setBackgroundResource(R.drawable.b_stop_4);
+				}
+				return false;
 			}
 		});
 
@@ -317,34 +348,36 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 		} else {
 			initialise();
 		}*/
-		/*
-		musicWave = (MusicWave) findViewById(R.id.musicWave);
-		mMediaPlayer = MediaPlayer.create(this, R.raw.music_example);
-		prepareVisualizer();
-		mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-			@Override
-			public void onCompletion(MediaPlayer mediaPlayer) {
-				mVisualizer.setEnabled(true);
-				mMediaPlayer.start();
-			}
-		});
-		mVisualizer.setEnabled(true);
-		mMediaPlayer.start();
-		mMediaPlayer.setVolume(0,0);
-
-		LinearLayoutWave = (android.widget.LinearLayout) findViewById(R.id.wave);
-		LinearLayoutWave.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				if(mMediaPlayerMute) {
-					mMediaPlayer.setVolume(0, 0);
-					mMediaPlayerMute = false;
-				}else{
-					mMediaPlayer.setVolume(1,1);
-					mMediaPlayerMute = true;
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+			musicWave = (MusicWave) findViewById(R.id.musicWave);
+			mMediaPlayer = MediaPlayer.create(this, R.raw.music_example);
+			askPermission();
+			prepareVisualizer();
+			mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+				@Override
+				public void onCompletion(MediaPlayer mediaPlayer) {
+					mVisualizer.setEnabled(true);
+					mMediaPlayer.start();
 				}
-			}
-		});*/
+			});
+			mVisualizer.setEnabled(true);
+			mMediaPlayer.start();
+			mMediaPlayer.setVolume(0, 0);
+
+			LinearLayoutWave = (android.widget.LinearLayout) findViewById(R.id.wave);
+			LinearLayoutWave.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View view) {
+					if (mMediaPlayerMute) {
+						mMediaPlayer.setVolume(0, 0);
+						mMediaPlayerMute = false;
+					} else {
+						mMediaPlayer.setVolume(1, 1);
+						mMediaPlayerMute = true;
+					}
+				}
+			});
+		}
 
 		byte[] bytearray = {-1, 0, 42, -115, -45, 0, 14, -12, 1, -2, 1, -2, 1, -2};
 
@@ -362,15 +395,11 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
                 public void onCompletion(MediaPlayer mediaPlayer) {
                     m.start();
                     m.setVolume(1,1);
-                    Log.d("PRSTART", "START");
                 }
             });
 
-            Log.d("PRSTART", "START");
-
         } catch (IOException e) {
             e.printStackTrace();
-            Log.d("YEAH", "NOSTART");
         }
 
     }
@@ -390,6 +419,30 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 					}
 				}, Visualizer.getMaxCaptureRate() / 2, true, false);
 		mVisualizer.setEnabled(true);
+	}
+
+	private boolean askPermission() {
+
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+			int RECORD_AUDIO = checkSelfPermission(Manifest.permission.RECORD_AUDIO);
+
+			if (RECORD_AUDIO != PackageManager.PERMISSION_GRANTED) {
+				permissions.add(Manifest.permission.RECORD_AUDIO);
+			}
+
+			if (!permissions.isEmpty()) {
+				requestPermissions(permissions.toArray(new String[permissions.size()]), 1);
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+
+		return true;
+
 	}
 
 
@@ -428,10 +481,12 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 				case BlinkyService.BROADCAST_LED_STATE_CHANGED: {
 					final boolean flag = intent.getBooleanExtra(BlinkyService.EXTRA_DATA, false);
 					if (flag) {
-						mImageBulb.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.bulb_on));
+						//mImageBulb.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.bulb_on));
+						mActionOnOff.setBackgroundResource(R.drawable.b_cancel_1);
 						bulb = true;
 					} else {
-						mImageBulb.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.bulb_off));
+						//mImageBulb.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.bulb_off));
+						mActionOnOff.setBackgroundResource(R.drawable.b_stop_3);
 						bulb = false;
 					}
 					break;
@@ -439,10 +494,12 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
                 case BlinkyService.BROADCAST_LED2_STATE_CHANGED: {
                     final boolean flag = intent.getBooleanExtra(BlinkyService.EXTRA_DATA, false);
                     if (flag) {
-                        mImageBulb2.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.bulb_on));
+                        //mImageBulb2.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.bulb_on));
+						mActionOnOff2.setBackgroundResource(R.drawable.b_pause_3);
                         bulb2 = true;
                     } else {
-                        mImageBulb2.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.bulb_off));
+                        //mImageBulb2.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.bulb_off));
+						mActionOnOff2.setBackgroundResource(R.drawable.b_play_1);
                         bulb2 = false;
                     }
                     break;
@@ -450,14 +507,14 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 				case BlinkyService.BROADCAST_BUTTON_STATE_CHANGED: {
 					final boolean flag = intent.getBooleanExtra(BlinkyService.EXTRA_DATA, false);
 
-                    mBackgroundView.setVisibility(View.VISIBLE);
-                    Handler handler = new Handler();
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            mBackgroundView.setVisibility(View.INVISIBLE);
-                        }
-                    }, 400);
+                    //mBackgroundView.setVisibility(View.VISIBLE);
+                    //Handler handler = new Handler();
+                    //handler.postDelayed(new Runnable() {
+                    //    @Override
+                    //    public void run() {
+                    //        mBackgroundView.setVisibility(View.INVISIBLE);
+                    //    }
+                    //}, 400);
 
 					/* If Button.pressed activated *//*
 					if(bulb == false && bulb2 == false){
@@ -472,14 +529,14 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
                 case BlinkyService.BROADCAST_BUTTON2_STATE_CHANGED: {
                     final boolean flag = intent.getBooleanExtra(BlinkyService.EXTRA_DATA, false);
 
-                    mBackgroundView2.setVisibility(View.VISIBLE);
-                    Handler handler = new Handler();
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            mBackgroundView2.setVisibility(View.INVISIBLE);
-                        }
-                    }, 400);
+                    //mBackgroundView2.setVisibility(View.VISIBLE);
+                    //Handler handler = new Handler();
+                    //handler.postDelayed(new Runnable() {
+					//    @Override
+                    //    public void run() {
+                    //        mBackgroundView2.setVisibility(View.INVISIBLE);
+                    //    }
+                    //}, 400);
 
                     /* If Button.pressed activated *//*
                     if(bulb == false && bulb2 == false){
@@ -499,8 +556,10 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 							break;
 						case BleProfileService.STATE_DISCONNECTED:
 							mActionConnect.setText(getString(R.string.action_connect));
-							mImageBulb.setImageDrawable(ContextCompat.getDrawable(ControlBlinkyActivity.this, R.drawable.bulb_off));
-							mImageBulb2.setImageDrawable(ContextCompat.getDrawable(ControlBlinkyActivity.this, R.drawable.bulb_off));
+							//mImageBulb.setImageDrawable(ContextCompat.getDrawable(ControlBlinkyActivity.this, R.drawable.bulb_off));
+							//mImageBulb2.setImageDrawable(ContextCompat.getDrawable(ControlBlinkyActivity.this, R.drawable.bulb_off));
+							mActionOnOff2.setBackgroundResource(R.drawable.b_play_1);
+							mActionOnOff.setBackgroundResource(R.drawable.b_stop_3);
 							break;
 					}
 					break;
