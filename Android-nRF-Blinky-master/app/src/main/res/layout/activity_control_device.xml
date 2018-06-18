@@ -104,7 +104,7 @@
 					android:id="@+id/img_bulb"
 					android:layout_width="wrap_content"
 					android:layout_height="match_parent"
-					android:contentDescription="@string/todo"
+					android:contentDescription="@string/todo2"
 					android:scaleType="centerInside"
 					android:src="@drawable/bulb_off"
 					android:layout_marginTop="10dip"
@@ -114,7 +114,7 @@
 					android:id="@+id/img_bulb2"
 					android:layout_width="wrap_content"
 					android:layout_height="match_parent"
-					android:contentDescription="@string/todo"
+					android:contentDescription="@string/todo1"
 					android:scaleType="centerInside"
 					android:src="@drawable/bulb_off"
 					android:layout_marginTop="10dip"
@@ -233,11 +233,17 @@
 					<TextView
 						android:layout_width="wrap_content"
 						android:layout_height="match_parent"
-						android:text="10:10"
+						android:text="0:30"
 						android:id="@+id/RecordFor"
 						android:gravity="center"
 						android:layout_marginLeft="15dip"
 						android:textColor="@android:color/black"/>
+
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="match_parent"
+						android:text="h"
+						android:gravity="center"/>
 
 					<TextView
 						android:layout_width="wrap_content"
@@ -250,11 +256,17 @@
 					<TextView
 						android:layout_width="wrap_content"
 						android:layout_height="match_parent"
-						android:text="10:10"
+						android:text="01:00"
 						android:id="@+id/PauseFor"
 						android:gravity="center"
 						android:layout_marginLeft="15dip"
 						android:textColor="@android:color/black"/>
+
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="match_parent"
+						android:text="h"
+						android:gravity="center"/>
 
 				</LinearLayout>
 

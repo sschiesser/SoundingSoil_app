@@ -32,7 +32,9 @@ package no.nordicsemi.android.blinky;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.DialogFragment;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -40,28 +42,25 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.MediaRecorder;
 import android.media.audiofx.Visualizer;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.provider.MediaStore;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.InputFilter;
 import android.text.InputType;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -69,11 +68,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.view.ViewTreeObserver;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
+import android.widget.ListView;
 import android.widget.RadioGroup;
-import android.widget.Spinner;
-import android.os.Handler;
-import android.support.design.widget.FloatingActionButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.codetroopers.betterpickers.radialtimepicker.RadialTimePickerDialogFragment;
 
@@ -81,23 +79,21 @@ import ak.sh.ay.musicwave.MusicWave;
 import no.nordicsemi.android.blinky.profile.BleProfileService;
 import no.nordicsemi.android.blinky.service.BlinkyService;
 
-import com.codetroopers.betterpickers.*;
-
-import org.w3c.dom.Text;
-
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Array;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import no.nordicsemi.android.blinky.MainActivity;
 
 public class ControlBlinkyActivity extends AppCompatActivity implements RadialTimePickerDialogFragment.OnTimeSetListener{
 
 	private BlinkyService.BlinkyBinder mBlinkyDevice;
+	private UartService.LocalBinder mBlinkyDevice2;
 	private Button mActionOnOff, mActionConnect, mActionOnOff2;
 	private ImageView mImageBulb;
 	private ImageView mImageBulb2;
@@ -107,8 +103,6 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 	private LinearLayout LinearLayout;
 	private LinearLayout LinearLayoutWave;
 	private int height;
-	private Spinner spinner3;
-	private Spinner spinner4;
 	private TextView recordfor;
 	private TextView pausefor;
 
@@ -124,7 +118,261 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 	public boolean timepicker = true;
 	List<String> permissions = new ArrayList<String>();
 
-	public File outputmediafile;
+	public MainActivity ma;
+	public MediaPlayer m = new MediaPlayer();
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    private static final int REQUEST_ENABLE_BT = 2;
+    private static final int REQUEST_SELECT_DEVICE = 1;
+    private static final int STATE_OFF = 10;
+    public static final String TAG = "YEAH";
+    private static final int UART_PROFILE_CONNECTED = 20;
+    private static final int UART_PROFILE_DISCONNECTED = 21;
+    private static final int UART_PROFILE_READY = 10;
+    private final BroadcastReceiver UARTStatusChangeReceiver = new C00593();
+    private ArrayAdapter<String> listAdapter;
+    private BluetoothAdapter mBtAdapter = null;
+    private BluetoothDevice mDevice = null;
+    private Handler mHandler = new C00552();
+    TextView mRemoteRssiVal;
+    RadioGroup mRg;
+    private UartService mService = null;
+    private ServiceConnection mServiceConnection2 = new C00541();
+    private int mState = UART_PROFILE_DISCONNECTED;
+    private BluetoothAdapter mBluetoothAdapter;
+	private BluetoothAdapter.LeScanCallback mLeScanCallback = new C00501();
+
+	public String deviceAddress = "";
+
+	class C00501 implements BluetoothAdapter.LeScanCallback {
+		C00501() {
+		}
+
+		public void onLeScan(final BluetoothDevice device, final int rssi, byte[] scanRecord) {
+			ControlBlinkyActivity.this.runOnUiThread(new Runnable() {
+				public void run() {
+					ControlBlinkyActivity access$0 = ControlBlinkyActivity.this;
+					final BluetoothDevice bluetoothDevice = device;
+					final int i = rssi;
+					access$0.runOnUiThread(new Runnable() {
+						public void run() {
+							//ControlBlinkyActivity.this.addDevice(bluetoothDevice, i);
+						}
+					});
+				}
+			});
+		}
+	}
+
+    class C00541 implements ServiceConnection {
+        C00541() {
+        }
+
+        public void onServiceConnected(ComponentName className, IBinder rawBinder) {
+        	Log.d("YEAH", "WHAT");
+            ControlBlinkyActivity.this.mService = ((UartService.LocalBinder) rawBinder).getService();
+            Log.d("YEAH", "onServiceConnected mService = " + ControlBlinkyActivity.this.mService);
+            Log.d("YEAH", "Address" + deviceAddress);
+
+			Log.d("YEAH", "Address" + deviceAddress);
+			mDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(deviceAddress);
+			Log.d(TAG, "... onActivityResultdevice.address==" + mDevice + "mserviceValue" + mService);
+
+			mService.initialize();
+			mService.connect(deviceAddress);
+
+            if (!ControlBlinkyActivity.this.mService.initialize()) {
+                Log.e("YEAH", "Unable to initialize Bluetooth");
+                ControlBlinkyActivity.this.finish();
+            }
+        }
+
+        public void onServiceDisconnected(ComponentName classname) {
+            ControlBlinkyActivity.this.mService = null;
+        }
+    }
+
+    class C00552 extends Handler {
+        C00552() {
+        }
+
+        public void handleMessage(Message msg) {
+        }
+    }
+
+    class C00593 extends BroadcastReceiver {
+
+        class C00561 implements Runnable {
+            C00561() {
+            }
+
+            public void run() {
+                String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
+                Log.d("YEAH", "UART_CONNECT_MSG");
+            }
+        }
+
+        class C00572 implements Runnable {
+            C00572() {
+            }
+
+            public void run() {
+                String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
+                Log.d("YEAH", "UART_DISCONNECT_MSG");
+                ControlBlinkyActivity.this.mService.close();
+            }
+        }
+
+        C00593() {
+        	Log.d("YEAH", "Create BroadCastRec UART");
+        }
+
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+
+            Intent mIntent = intent;
+            if (action.equals(UartService.ACTION_GATT_CONNECTED)) {
+                ControlBlinkyActivity.this.runOnUiThread(new C00561());
+            }
+            if (action.equals(UartService.ACTION_GATT_DISCONNECTED)) {
+                ControlBlinkyActivity.this.runOnUiThread(new C00572());
+            }
+            if (action.equals(UartService.ACTION_GATT_SERVICES_DISCOVERED)) {
+                ControlBlinkyActivity.this.mService.enableTXNotification();
+            }
+            if (action.equals(UartService.ACTION_DATA_AVAILABLE)) {
+                final byte[] txValue = intent.getByteArrayExtra(UartService.EXTRA_DATA);
+                ControlBlinkyActivity.this.runOnUiThread(new Runnable() {
+                    public void run() {
+                        try {
+                            //Log.d("YEAH", "TX" + new String(txValue, "UTF-8"));
+                            //playSound(new String(txValue, "UTF-8"));
+							playSound(txValue);
+                        } catch (Exception e) {
+                            Log.e("YEAH", e.toString());
+                        }
+                    }
+                });
+            }
+            if (action.equals(UartService.DEVICE_DOES_NOT_SUPPORT_UART)) {
+                ControlBlinkyActivity.this.mService.disconnect();
+            }
+        }
+    }
+
+    public void playSound(byte[] input) throws IOException {
+		//Log.d("YEAH", "Input: " + input);
+
+		//if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+		//
+		//	mMediaPlayer = MediaPlayer.create(this, R.raw.music_example);
+		//	askPermission();
+		//	prepareVisualizer();
+		//	mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+		//		@Override
+		//		public void onCompletion(MediaPlayer mediaPlayer) {
+		//			mVisualizer.setEnabled(true);
+		//			mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+		//				public void onPrepared(MediaPlayer player) {
+		//					player.start();
+		//				}
+		//			});
+		//		}
+		//	});
+		//	mVisualizer.setEnabled(true);
+		//	mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+		//		public void onPrepared(MediaPlayer player) {
+		//			player.start();
+		//		}
+		//	});
+		//	mMediaPlayer.start();
+		//	mMediaPlayer.setVolume(0, 0);
+//
+		//	LinearLayoutWave = (android.widget.LinearLayout) findViewById(R.id.wave);
+		//	LinearLayoutWave.setOnClickListener(new View.OnClickListener() {
+		//		@Override
+		//		public void onClick(View view) {
+		//			if (mMediaPlayerMute) {
+		//				mMediaPlayer.setVolume(0, 0);
+		//				mMediaPlayerMute = false;
+		//			} else {
+		//				mMediaPlayer.setVolume(1, 1);
+		//				mMediaPlayerMute = true;
+		//			}
+		//		}
+		//	});
+		//}
+
+		Log.d("YEAH", "1" + input[1]);
+		Log.d("YEAH", "2" + input[2]);
+
+		playByteArray(input);
+
+	}
+
+	private void playByteArray(byte[] mp3SoundByteArray) throws IOException {
+
+		byte[] bytearray = mp3SoundByteArray;
+
+		try {
+			File file = File.createTempFile("UTF-8",".mp3");
+			FileOutputStream fos = new FileOutputStream(file);
+			fos.write(bytearray);
+			
+
+			m.reset();
+			m.setDataSource(String.valueOf(file));
+			m.prepare();
+			m.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+						public void onPrepared(MediaPlayer player) {
+							player.start();
+							Log.d("YEAH", "START");
+						}
+			});
+			m.setVolume(1,1);
+			m.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+				@Override
+				public void onCompletion(MediaPlayer mediaPlayer) {
+					Log.d("YEAH", "FINISH");
+				}
+			});
+
+		} catch (IOException e) {
+			String s = e.toString();
+			Log.d("YEAH", "Error" + s);
+		}
+
+	}
+
+	@SuppressLint("WrongConstant")
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		Log.d("YEAH", "$$$" + requestCode);
+		switch (requestCode) {
+			case 1:
+				if (resultCode == -1 && data != null) {
+					Log.d("YEAH", "Address" + deviceAddress);
+					this.mDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(deviceAddress);
+					Log.d(TAG, "... onActivityResultdevice.address==" + this.mDevice + "mserviceValue" + this.mService);
+					this.mService.connect(deviceAddress);
+					return;
+				}
+				return;
+			case 2:
+				if (resultCode == -1) {
+					Toast.makeText(this, "Bluetooth has turned on ", 0).show();
+					return;
+				}
+				Log.d(TAG, "BT not enabled");
+				Toast.makeText(this, "Problem in BT Turning ON ", 0).show();
+				finish();
+				return;
+			default:
+				Log.e(TAG, "wrong request code");
+				return;
+		}
+	}
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 
 	private ServiceConnection mServiceConnection = new ServiceConnection() {
 		@Override
@@ -132,7 +380,7 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 			mBlinkyDevice = (BlinkyService.BlinkyBinder) service;
 
 			if (mBlinkyDevice.isConnected()) {
-				mActionConnect.setText(getString(R.string.action_disconnect));
+                    mActionConnect.setText(getString(R.string.action_disconnect));
 
 				if (mBlinkyDevice.isButtonPressed()) {
 					mBackgroundView.setVisibility(View.VISIBLE);
@@ -151,20 +399,57 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 		}
 	};
 
-	@SuppressLint("ClickableViewAccessibility")
+	protected void onStop() {
+		Log.d(TAG, "onStop");
+		super.onStop();
+	}
+
+	protected void onPause() {
+		Log.d(TAG, "onPause");
+		super.onPause();
+	}
+
+	protected void onRestart() {
+		super.onRestart();
+		Log.d(TAG, "onRestart");
+	}
+
+	public void onResume() {
+		super.onResume();
+		Log.d(TAG, "onResume");
+		if (!this.mBtAdapter.isEnabled()) {
+			Log.i(TAG, "onResume - BT not enabled yet");
+			startActivityForResult(new Intent("android.bluetooth.adapter.action.REQUEST_ENABLE"), 2);
+		}
+	}
+
+	@SuppressLint({"ClickableViewAccessibility", "WrongConstant"})
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_control_device);
 
 		Intent i = getIntent();
-		final String deviceName = i.getStringExtra(BlinkyService.EXTRA_DEVICE_NAME);
-		final String deviceAddress = i.getStringExtra(BlinkyService.EXTRA_DEVICE_ADDRESS);
+		final String deviceName = i.getStringExtra(UartService.EXTRA_DEVICE_NAME);
+		deviceAddress = i.getStringExtra(UartService.EXTRA_DEVICE_ADDRESS);
+		Log.d("YEAH", "AddressI " + deviceAddress);
 
 		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
 		getSupportActionBar().setTitle(deviceName);
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+		this.mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+
+		if (this.mBtAdapter == null) {
+			Toast.makeText(this, "Bluetooth is not available", 1).show();
+			finish();
+			return;
+		}
+
+        ActivityCompat.requestPermissions(ControlBlinkyActivity.this,
+                new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                1);
 
 		mActionOnOff = (Button) findViewById(R.id.button_blinky);
 		mActionOnOff2 = (Button) findViewById(R.id.button_switch);
@@ -234,22 +519,47 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 			}
 		});
 
+		this.mBluetoothAdapter = ((BluetoothManager) getSystemService("bluetooth")).getAdapter();
+		if (this.mBluetoothAdapter == null) {
+			Toast.makeText(this, R.string.ble_not_supported, 0).show();
+			finish();
+			return;
+		}
+
 		LocalBroadcastManager.getInstance(this).registerReceiver(mBlinkyUpdateReceiver, makeGattUpdateIntentFilter());
+        //LocalBroadcastManager.getInstance(this).registerReceiver(UARTStatusChangeReceiver, makeGattUpdateIntent2Filter());
+
+        //final Intent intent2 = new Intent(this, UartService.class);
+        //intent2.putExtra("android.bluetooth.device.extra.DEVICE", deviceAddress);
+        //startService(intent2);
+        //Log.d("YEAH", "START SERVICE");
+        //bindService(intent2, mServiceConnection2, 0);
 
 		final Intent intent = new Intent(this, BlinkyService.class);
 		intent.putExtra(BlinkyService.EXTRA_DEVICE_ADDRESS, deviceAddress);
 		startService(intent);
 		bindService(intent, mServiceConnection, 0);
 
+		//ControlBlinkyActivity.this.mBluetoothAdapter.stopLeScan(ControlBlinkyActivity.this.mLeScanCallback);
+		//Bundle b = new Bundle();
+		//b.putString("android.bluetooth.device.extra.DEVICE", deviceAddress);
+		//Intent result = new Intent();
+		//result.putExtras(b);
+		//ControlBlinkyActivity.this.setResult(-1, result);
+		//ControlBlinkyActivity.this.finish();
+
 		mActionConnect.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if (mBlinkyDevice != null && mBlinkyDevice.isConnected()) {
+				/*if (mBlinkyDevice != null && mBlinkyDevice.isConnected()) {
 					mBlinkyDevice.disconnect();
-				} else {
+				} else {*/
 					startService(intent);
+					//startService(intent2);
 					bindService(intent, mServiceConnection, 0);
-				}
+					//bindService(intent2, mServiceConnection2, -1);
+					service_init();
+				//}
 			}
 		});
 
@@ -348,61 +658,18 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 		} else {
 			initialise();
 		}*/
-		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-			musicWave = (MusicWave) findViewById(R.id.musicWave);
-			mMediaPlayer = MediaPlayer.create(this, R.raw.music_example);
-			askPermission();
-			prepareVisualizer();
-			mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-				@Override
-				public void onCompletion(MediaPlayer mediaPlayer) {
-					mVisualizer.setEnabled(true);
-					mMediaPlayer.start();
-				}
-			});
-			mVisualizer.setEnabled(true);
-			mMediaPlayer.start();
-			mMediaPlayer.setVolume(0, 0);
 
-			LinearLayoutWave = (android.widget.LinearLayout) findViewById(R.id.wave);
-			LinearLayoutWave.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View view) {
-					if (mMediaPlayerMute) {
-						mMediaPlayer.setVolume(0, 0);
-						mMediaPlayerMute = false;
-					} else {
-						mMediaPlayer.setVolume(1, 1);
-						mMediaPlayerMute = true;
-					}
-				}
-			});
-		}
+		musicWave = (MusicWave) findViewById(R.id.musicWave);
 
-		byte[] bytearray = {-1, 0, 42, -115, -45, 0, 14, -12, 1, -2, 1, -2, 1, -2};
-
-        try {
-            File file = File.createTempFile("prefixx","suffixx");
-            FileOutputStream fos = new FileOutputStream(file);
-            fos.write(bytearray);
-
-            final MediaPlayer m = new MediaPlayer();
-            m.setDataSource(String.valueOf(file));
-            m.start();
-            m.setVolume(1,1);
-            m.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mediaPlayer) {
-                    m.start();
-                    m.setVolume(1,1);
-                }
-            });
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+		service_init();
     }
+
+	@SuppressLint("WrongConstant")
+	private void service_init() {
+		bindService(new Intent(this, UartService.class), this.mServiceConnection2, 1);
+		LocalBroadcastManager.getInstance(this).registerReceiver(this.UARTStatusChangeReceiver, makeGattUpdateIntent2Filter());
+		Log.d("YEAH", "service_init");
+	}
 
 	private void prepareVisualizer() {
 		mVisualizer = new Visualizer(mMediaPlayer.getAudioSessionId());
@@ -466,9 +733,12 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 	protected void onDestroy() {
 		super.onDestroy();
 		unbindService(mServiceConnection);
+		//unbindService(mServiceConnection2);
 		LocalBroadcastManager.getInstance(this).unregisterReceiver(mBlinkyUpdateReceiver);
+		//LocalBroadcastManager.getInstance(this).unregisterReceiver(UARTStatusChangeReceiver);
 
 		mServiceConnection = null;
+		//mServiceConnection2 = null;
 		mBlinkyDevice = null;
 	}
 
@@ -476,7 +746,7 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			final String action = intent.getAction();
-
+            Log.d("YEAH", "IN" + action);
 			switch (action) {
 				case BlinkyService.BROADCAST_LED_STATE_CHANGED: {
 					final boolean flag = intent.getBooleanExtra(BlinkyService.EXTRA_DATA, false);
@@ -582,11 +852,43 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 		intentFilter.addAction(BlinkyService.BROADCAST_BUTTON2_STATE_CHANGED);
 		intentFilter.addAction(BlinkyService.BROADCAST_CONNECTION_STATE);
 		intentFilter.addAction(BlinkyService.BROADCAST_ERROR);
+
+		return intentFilter;
+	}
+
+	private static IntentFilter makeGattUpdateIntent2Filter() {
+		final IntentFilter intentFilter = new IntentFilter();
+		intentFilter.addAction(UartService.ACTION_GATT_CONNECTED);
+		intentFilter.addAction(UartService.ACTION_GATT_DISCONNECTED);
+		intentFilter.addAction(UartService.ACTION_GATT_SERVICES_DISCOVERED);
+		intentFilter.addAction(UartService.ACTION_DATA_AVAILABLE);
+		intentFilter.addAction(UartService.DEVICE_DOES_NOT_SUPPORT_UART);
+
 		return intentFilter;
 	}
 
 	private void showError(final String error) {
 		Snackbar.make(mParentView, error, Snackbar.LENGTH_LONG).show();
+	}
+
+	public void onStart() {
+		super.onStart();
+		IntentFilter filter = new IntentFilter("android.bluetooth.device.action.FOUND");
+		filter.addAction("android.bluetooth.adapter.action.DISCOVERY_FINISHED");
+		filter.addAction("android.bluetooth.adapter.action.STATE_CHANGED");
+	}
+
+	private void scanLeDevice(boolean enable) {
+		if (enable) {
+			this.mHandler.postDelayed(new Runnable() {
+				public void run() {
+					ControlBlinkyActivity.this.mBluetoothAdapter.stopLeScan(ControlBlinkyActivity.this.mLeScanCallback);
+				}
+			}, 10000);
+			this.mBluetoothAdapter.startLeScan(this.mLeScanCallback);
+			return;
+		}
+		this.mBluetoothAdapter.stopLeScan(this.mLeScanCallback);
 	}
 
     @Override

@@ -32,34 +32,38 @@ package no.nordicsemi.android.blinky;
 
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
-import android.location.SettingInjectorService;
-import android.media.audiofx.Visualizer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
 import android.os.ParcelUuid;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewDebug;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -74,7 +78,9 @@ import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import no.nordicsemi.android.blinky.adapter.BleDeviceAdapter;
@@ -96,11 +102,13 @@ public class MainActivity extends AppCompatActivity implements PermissionRationa
 	private static final int REQUEST_LOCATION_SERVICES = 211;
 	private static final int REQUEST_ACCESS_COARSE_LOCATION = 212;
 
-	private static final long SCAN_PERIOD = 10000; // [ms]
+	private static final long SCAN_PERIOD = 25000; // [ms]
 
 	/** LED Button Service UUID that's required in the device's Advertising packet to be shown. */
 	//private final static String LBS_UUID_SERVICE = "00001523-1212-efde-1523-785feabcd123";
 	private final static String LBS_UUID_SERVICE = "00001523-0000-1000-8000-00805f9b34fb";
+	//private final static String LBS_UUID_SERVICE = "00000001-0000-1000-8000-00805f9b34fb";
+
 
 	private BluetoothLeScannerCompat mScanner;
 	private ArrayList<ScanFilter> scanFilterList;
@@ -110,11 +118,20 @@ public class MainActivity extends AppCompatActivity implements PermissionRationa
 	private GoogleApiClient mGoogleApiClient = null;
 	private boolean locationServicesRequestApproved = false;
 	private boolean mScanning;
+	public String selectedDeviceAddress;
+
+	//
+	//private BluetoothAdapter.LeScanCallback mLeScanCallback = new C00501();
+	private BluetoothAdapter mBluetoothAdapter;
 
 	@Override
 	protected void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+
+		ActivityCompat.requestPermissions(MainActivity.this,
+				new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+				1);
 
 		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
@@ -132,15 +149,22 @@ public class MainActivity extends AppCompatActivity implements PermissionRationa
 
 	@Override
 	public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
+
 		BluetoothDevice device = mBleDeviceListAdapter.getItem(position);
 		Intent controlBlinkIntent = new Intent(this, ControlBlinkyActivity.class);
-		controlBlinkIntent.putExtra(BlinkyService.EXTRA_DEVICE_NAME, device.getName());
-		controlBlinkIntent.putExtra(BlinkyService.EXTRA_DEVICE_ADDRESS, device.getAddress());
+		controlBlinkIntent.putExtra(UartService.EXTRA_DEVICE_NAME, device.getName());
+		controlBlinkIntent.putExtra(UartService.EXTRA_DEVICE_ADDRESS, device.getAddress());
+		selectedDeviceAddress = device.getAddress();
+		Log.d("YEAH", "Address" + selectedDeviceAddress);
 		startActivity(controlBlinkIntent);
 
 		mBleDeviceListAdapter.clear();
 		mBleDeviceListAdapter.notifyDataSetChanged();
 	}
+
+	public String getSDA(){
+	    return selectedDeviceAddress;
+    }
 
 	private void prepareForScan() {
 		if (isBleSupported()) {
@@ -182,7 +206,7 @@ public class MainActivity extends AppCompatActivity implements PermissionRationa
 				startLeScan();
 			}
 		}
-	}
+    }
 
 	@Override
 	protected void onStop() {
@@ -406,7 +430,6 @@ public class MainActivity extends AppCompatActivity implements PermissionRationa
 
 		@Override
 		public void onBatchScanResults(final List<ScanResult> results) {
-			Log.d("YEAH", "IN" + results);
 			boolean newDeviceFound = false;
 			for (final ScanResult result : results) {
 				if (!mBleDeviceListAdapter.hasDevice(result)) {
