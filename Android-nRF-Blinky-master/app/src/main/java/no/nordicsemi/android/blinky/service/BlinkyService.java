@@ -91,7 +91,19 @@ public class BlinkyService extends BleProfileService implements BlinkyManagerCal
 
 		final Intent broadcast = new Intent(BROADCAST_LED_STATE_CHANGED);
 		broadcast.putExtra(EXTRA_DATA, state);
+		Long a = getDateTime();
+		broadcast.putExtra("DATE", a);
 		LocalBroadcastManager.getInstance(this).sendBroadcast(broadcast);
+
+	}
+
+	private Long getDateTime() {
+		//Calendar mCalendar = Calendar.getInstance();
+		//TimeZone gmtTime =  TimeZone.getTimeZone(TimeZone.getDefault().getDisplayName());
+		//mCalendar.setTimeZone(gmtTime);
+		//final Date date = mCalendar.getTime();
+		Long a = System.currentTimeMillis()/1000;
+		return a;
 	}
 
 	@Override
