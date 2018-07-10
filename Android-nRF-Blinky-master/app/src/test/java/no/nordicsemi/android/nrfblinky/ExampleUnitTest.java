@@ -1,4 +1,4 @@
-package no.nordicsemi.android.blinky;
+package no.nordicsemi.android.nrfblinky;
 
 import org.junit.Test;
 

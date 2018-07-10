@@ -157,7 +157,7 @@ public class ControlBlinkActivity extends AppCompatActivity {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        Log.d("YEAH", "onSaveInstanceState");
+        Log.d("Control", "onSaveInstanceState");
         outState.putString(BlinkyService.EXTRA_DEVICE_NAME, mDeviceName);
         outState.putString(BlinkyService.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
         super.onSaveInstanceState(outState);
@@ -165,7 +165,7 @@ public class ControlBlinkActivity extends AppCompatActivity {
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        Log.d("YEAH", "onRestoreInstanceState");
+        Log.d("Control", "onRestoreInstanceState");
         super.onRestoreInstanceState(savedInstanceState);
         mDeviceName = savedInstanceState.getString(BlinkyService.EXTRA_DEVICE_NAME);
         mDeviceAddress = savedInstanceState.getString(BlinkyService.EXTRA_DEVICE_ADDRESS);

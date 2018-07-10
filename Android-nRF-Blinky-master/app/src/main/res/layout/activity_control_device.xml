@@ -172,7 +172,7 @@
 							android:id="@+id/radio_ninjas"
 							android:layout_width="wrap_content"
 							android:layout_height="match_parent"
-							android:text="Always" />
+							android:text="Always"/>
 
 						<RadioButton
 							android:id="@+id/radio_pirates"
@@ -202,7 +202,7 @@
 						android:id="@+id/editText"
 						android:layout_width="wrap_content"
 						android:layout_height="match_parent"
-						android:hint="1.5               "
+						android:hint="7.0               "
 						android:inputType="numberDecimal"
 						android:maxLength="5"
 						android:maxWidth="90dip"/>
@@ -233,7 +233,7 @@
 					<TextView
 						android:layout_width="wrap_content"
 						android:layout_height="match_parent"
-						android:text="0:30"
+						android:text="0:10"
 						android:id="@+id/RecordFor"
 						android:gravity="center"
 						android:layout_marginLeft="15dip"
@@ -256,7 +256,7 @@
 					<TextView
 						android:layout_width="wrap_content"
 						android:layout_height="match_parent"
-						android:text="01:00"
+						android:text="00:50"
 						android:id="@+id/PauseFor"
 						android:gravity="center"
 						android:layout_marginLeft="15dip"

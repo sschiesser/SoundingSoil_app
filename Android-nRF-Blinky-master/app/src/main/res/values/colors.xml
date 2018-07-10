@@ -30,9 +30,9 @@
   -->
 
 <resources>
-    <color name="colorPrimary">#009CDE</color>
-    <color name="colorPrimaryDark">#0081B7</color>
-    <color name="colorAccent">#0081B7</color>
+    <color name="colorPrimary">#000066</color><!--#009CDE--> <!--TaskBar Color -->
+    <color name="colorPrimaryDark">#00004d</color><!--#0081B7-->
+    <color name="colorAccent">#000080</color><!--#0081B7-->
     <color name="textColorBlack">#000000</color>
     <color name="background_green">#8800b712</color>
     <color name="background_red">#88FF0000</color>

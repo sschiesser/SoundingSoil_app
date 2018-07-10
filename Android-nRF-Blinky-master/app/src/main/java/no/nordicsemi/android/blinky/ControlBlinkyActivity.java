@@ -28,6 +28,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * ControlBlinkyActivity
+ *
+ * @use This Activity controls the bluetooth connection between the device and the app.
+ * There are two Action Record and Monitoring.
+ *
+ * @author Patrick Lüthi
+ *
+ */
+
 package no.nordicsemi.android.blinky;
 
 import android.Manifest;
@@ -42,9 +52,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.media.AudioFormat;
 import android.media.AudioManager;
-import android.media.AudioTrack;
 import android.media.MediaPlayer;
 import android.media.audiofx.Visualizer;
 import android.os.Build;
@@ -53,33 +61,33 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.SystemClock;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.InputType;
-import android.text.format.Time;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
-import android.view.ViewTreeObserver.OnGlobalLayoutListener;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.codetroopers.betterpickers.radialtimepicker.RadialTimePickerDialogFragment;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -89,350 +97,47 @@ import ak.sh.ay.musicwave.MusicWave;
 import no.nordicsemi.android.blinky.profile.BleProfileService;
 import no.nordicsemi.android.blinky.service.BlinkyService;
 
-//import java.sql.Time;
+import static android.os.Build.VERSION_CODES.N;
 
 public class ControlBlinkyActivity extends AppCompatActivity implements RadialTimePickerDialogFragment.OnTimeSetListener{
 
+	public static final String TAG = "ControlBlinkyActivity";
+
 	private BlinkyService.BlinkyBinder mBlinkyDevice;
-	private UartService.LocalBinder mBlinkyDevice2;
 	private Button mActionOnOff, mActionConnect, mActionOnOff2;
-	private ImageView mImageBulb;
-	private ImageView mImageBulb2;
 	private View mParentView;
 	private View mBackgroundView;
 	private View mBackgroundView2;
 	private LinearLayout LinearLayout;
-	private LinearLayout LinearLayoutWave;
 	private int height;
 	private TextView recordfor;
 	private TextView pausefor;
-
 	private MusicWave musicWave;
-	private MediaPlayer mMediaPlayer;
 	private Visualizer mVisualizer;
-	private boolean mMediaPlayerMute = false;
-
 	private boolean mActionOnOff2_b = false;
 	private boolean mActionOnOff_b = false;
-	public boolean bulb = false;
-	public boolean bulb2 = false;
-	public boolean timepicker = true;
-	List<String> permissions = new ArrayList<String>();
-
-	public MainActivity ma;
-	public MediaPlayer m = new MediaPlayer();
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    private static final int REQUEST_ENABLE_BT = 2;
-    private static final int REQUEST_SELECT_DEVICE = 1;
-    private static final int STATE_OFF = 10;
-    public static final String TAG = "YEAH";
-    private static final int UART_PROFILE_CONNECTED = 20;
-    private static final int UART_PROFILE_DISCONNECTED = 21;
-    private static final int UART_PROFILE_READY = 10;
-    private final BroadcastReceiver UARTStatusChangeReceiver = new C00593();
-    private ArrayAdapter<String> listAdapter;
-    private BluetoothAdapter mBtAdapter = null;
-    private BluetoothDevice mDevice = null;
-    private Handler mHandler = new C00552();
-    TextView mRemoteRssiVal;
-    RadioGroup mRg;
-    private UartService mService = null;
-    private ServiceConnection mServiceConnection2 = new C00541();
-    private int mState = UART_PROFILE_DISCONNECTED;
-    private BluetoothAdapter mBluetoothAdapter;
-	private BluetoothAdapter.LeScanCallback mLeScanCallback = new C00501();
-
-	public String deviceAddress = "";
-
-	public int zahl = 1;
-	public byte[] bytearray = new byte[5];
-
-	private static final int samplingRates[] = {16000, 11025, 11000, 8000, 6000};
-	public static int SAMPLE_RATE = 1200;
 	private String audioFilePath;
 	private String RECORD_WAV_PATH = Environment.getExternalStorageDirectory() + File.separator + "AudioRecord";
+	private static final int UART_PROFILE_DISCONNECTED = 21;
+	private final BroadcastReceiver UARTStatusChangeReceiver = new C00593();
+	private BluetoothAdapter mBtAdapter = null;
+	private BluetoothDevice mDevice = null;
+	private Handler mHandler = new C00552();
+	private UartService mService = null;
+	private ServiceConnection mServiceConnection2 = new C00541();
+	private BluetoothAdapter mBluetoothAdapter;
+	private BluetoothAdapter.LeScanCallback mLeScanCallback = new C00501();
 
-	private double duration = 0.1; // seconds3
-	private int sampleRate = 12000; // 5490
-	private int numSamples = (int) (duration * sampleRate);
-	private double sample[] = new double[numSamples];
-	private double freqOfTone = 10; // hz 10
-	private byte generatedSnd[] = new byte[2 * numSamples];
-	Handler handler = new Handler();
-
-	/* Get file name */
-	private File getFile(final String suffix) {
-		Time time = new Time();
-		time.setToNow();
-		audioFilePath = time.format("%Y%m%d%H%M%S");
-		return new File(RECORD_WAV_PATH, time.format("%Y%m%d%H%M%S") + "." + suffix);
-	}
-
-
-	class C00501 implements BluetoothAdapter.LeScanCallback {
-		C00501() {
-		}
-
-		public void onLeScan(final BluetoothDevice device, final int rssi, byte[] scanRecord) {
-			ControlBlinkyActivity.this.runOnUiThread(new Runnable() {
-				public void run() {
-					ControlBlinkyActivity access$0 = ControlBlinkyActivity.this;
-					final BluetoothDevice bluetoothDevice = device;
-					final int i = rssi;
-					access$0.runOnUiThread(new Runnable() {
-						public void run() {
-							//ControlBlinkyActivity.this.addDevice(bluetoothDevice, i);
-						}
-					});
-				}
-			});
-		}
-	}
-
-    class C00541 implements ServiceConnection {
-        C00541() {
-        }
-
-        public void onServiceConnected(ComponentName className, IBinder rawBinder) {
-            ControlBlinkyActivity.this.mService = ((UartService.LocalBinder) rawBinder).getService();
-
-			mDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(deviceAddress);
-
-			mService.initialize();
-			mService.connect(deviceAddress);
-
-            if (!ControlBlinkyActivity.this.mService.initialize()) {
-                ControlBlinkyActivity.this.finish();
-            }
-        }
-
-        public void onServiceDisconnected(ComponentName classname) {
-            ControlBlinkyActivity.this.mService = null;
-        }
-    }
-
-    class C00552 extends Handler {
-        C00552() {
-        }
-
-        public void handleMessage(Message msg) {
-        }
-    }
-
-    class C00593 extends BroadcastReceiver {
-
-        class C00561 implements Runnable {
-            C00561() {
-            }
-
-            public void run() {
-                String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
-                Log.d("YEAH", "UART_CONNECT_MSG");
-            }
-        }
-
-        class C00572 implements Runnable {
-            C00572() {
-            }
-
-            public void run() {
-                String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
-                Log.d("YEAH", "UART_DISCONNECT_MSG");
-                ControlBlinkyActivity.this.mService.close();
-            }
-        }
-
-        C00593() {
-        	Log.d("YEAH", "Create BroadCastRec UART");
-        }
-
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-
-            Intent mIntent = intent;
-            if (action.equals(UartService.ACTION_GATT_CONNECTED)) {
-                ControlBlinkyActivity.this.runOnUiThread(new C00561());
-            }
-            if (action.equals(UartService.ACTION_GATT_DISCONNECTED)) {
-                ControlBlinkyActivity.this.runOnUiThread(new C00572());
-            }
-            if (action.equals(UartService.ACTION_GATT_SERVICES_DISCOVERED)) {
-                ControlBlinkyActivity.this.mService.enableTXNotification();
-            }
-            if (action.equals(UartService.ACTION_DATA_AVAILABLE)) {
-                final byte[] txValue = intent.getByteArrayExtra(UartService.EXTRA_DATA);
-                ControlBlinkyActivity.this.runOnUiThread(new Runnable() {
-                    public void run() {
-                        try {
-							playSound(txValue);
-                        } catch (Exception e) {
-                            Log.e("YEAH", e.toString());
-                        }
-                    }
-                });
-            }
-            if (action.equals(UartService.DEVICE_DOES_NOT_SUPPORT_UART)) {
-                ControlBlinkyActivity.this.mService.disconnect();
-            }
-        }
-    }
-
-    public void playSound(byte[] input) throws IOException {
-		/*
-		if(zahl <= 30) {
-			playByteArray(input);
-			zahl += 1;
-		} else if (zahl == 31){
-			playByteArray2();
-			zahl = 1;
-			bytearray = null;
-		}*/
-
-		playByteArray(input);
-
-	}
-
-	private void playByteArray(byte[] mp3SoundByteArray) throws IOException {
-
-		if(zahl > 1) {
-
-			byte[] c = new byte[bytearray.length + mp3SoundByteArray.length];
-			System.arraycopy(bytearray, 0, c, 0, bytearray.length);
-			System.arraycopy(mp3SoundByteArray, 0, c, bytearray.length, mp3SoundByteArray.length);
-			bytearray = c;
-
-		} else if(zahl == 1){
-			bytearray =  null;
-			bytearray = mp3SoundByteArray;
-		}
-
-		askPermission();
-
-		AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
-				12200, AudioFormat.CHANNEL_CONFIGURATION_MONO,
-				AudioFormat.ENCODING_PCM_16BIT, bytearray.length,
-				AudioTrack.MODE_STATIC);
-		audioTrack.write(bytearray, 0, bytearray.length);
-
-		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-
-			mVisualizer = new Visualizer(audioTrack.getAudioSessionId());
-			mVisualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[1]);
-			mVisualizer.setDataCaptureListener(
-					new Visualizer.OnDataCaptureListener() {
-						public void onWaveFormDataCapture(Visualizer visualizer,
-														  byte[] bytes, int samplingRate) {
-							musicWave.updateVisualizer(bytes);
-						}
-
-						public void onFftDataCapture(Visualizer visualizer,
-													 byte[] bytes, int samplingRate) {
-						}
-					}, Visualizer.getMaxCaptureRate() / 2, true, false);
-			mVisualizer.setEnabled(true);
-
-		}
-
-		audioTrack.play();
-		audioTrack.release();
-
-	}
-
-	private void writeInt(final DataOutputStream output, final int value) throws IOException {
-		output.write(value >> 0);
-		output.write(value >> 8);
-		output.write(value >> 16);
-		output.write(value >> 24);
-	}
-
-	private void writeShort(final DataOutputStream output, final short value) throws IOException {
-		output.write(value >> 0);
-		output.write(value >> 8);
-	}
-
-	private void writeString(final DataOutputStream output, final String value) throws IOException {
-		for (int i = 0; i < value.length(); i++) {
-			output.write(value.charAt(i));
-		}
-	}
-
-
-	@SuppressLint("WrongConstant")
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		switch (requestCode) {
-			case 1:
-				if (resultCode == -1 && data != null) {
-					Log.d("YEAH", "Address" + deviceAddress);
-					this.mDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(deviceAddress);
-					Log.d(TAG, "... onActivityResultdevice.address==" + this.mDevice + "mserviceValue" + this.mService);
-					this.mService.connect(deviceAddress);
-					return;
-				}
-				return;
-			case 2:
-				if (resultCode == -1) {
-					Toast.makeText(this, "Bluetooth has turned on ", 0).show();
-					return;
-				}
-				Log.d(TAG, "BT not enabled");
-				Toast.makeText(this, "Problem in BT Turning ON ", 0).show();
-				finish();
-				return;
-			default:
-				Log.e(TAG, "wrong request code");
-				return;
-		}
-	}
-
-	private ServiceConnection mServiceConnection = new ServiceConnection() {
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			mBlinkyDevice = (BlinkyService.BlinkyBinder) service;
-
-			if (mBlinkyDevice.isConnected()) {
-                    mActionConnect.setText(getString(R.string.action_disconnect));
-
-				if (mBlinkyDevice.isButtonPressed()) {
-					mBackgroundView.setVisibility(View.VISIBLE);
-				} else {
-					mBackgroundView.setVisibility(View.INVISIBLE);
-				}
-
-			} else {
-				mActionConnect.setText(getString(R.string.action_connect));
-			}
-		}
-
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			mBlinkyDevice = null;
-		}
-	};
-
-	protected void onStop() {
-		Log.d(TAG, "onStop");
-		super.onStop();
-	}
-
-	protected void onPause() {
-		Log.d(TAG, "onPause");
-		super.onPause();
-	}
-
-	protected void onRestart() {
-		super.onRestart();
-		Log.d(TAG, "onRestart");
-	}
-
-	public void onResume() {
-		super.onResume();
-		Log.d(TAG, "onResume");
-		if (!this.mBtAdapter.isEnabled()) {
-			Log.i(TAG, "onResume - BT not enabled yet");
-			startActivityForResult(new Intent("android.bluetooth.adapter.action.REQUEST_ENABLE"), 2);
-		}
-	}
+	public boolean bulb = false;
+	public boolean bulb2 = false;
+	public boolean timePicker = true;
+	public String deviceAddress = "";
+	public byte[] byteArray = new byte[5];
+	public byte[] even = null;
+	public byte[] odd = null;
+	public List<String> permissions = new ArrayList<String>();
+	public Handler handler = new Handler();
+	public int zaehler = 1;
 
 	@SuppressLint({"ClickableViewAccessibility", "WrongConstant"})
 	@Override
@@ -461,19 +166,21 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 			return;
 		}
 
-        ActivityCompat.requestPermissions(ControlBlinkyActivity.this,
-                new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                1);
+		ActivityCompat.requestPermissions(ControlBlinkyActivity.this,
+				new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+				1);
 
 		mActionOnOff = (Button) findViewById(R.id.button_blinky);
 		mActionOnOff2 = (Button) findViewById(R.id.button_switch);
 		mActionConnect = (Button) findViewById(R.id.action_connect);
-		//mImageBulb = (ImageView) findViewById(R.id.img_bulb);
-		//mImageBulb2 = (ImageView) findViewById(R.id.img_bulb2);
 		mBackgroundView = findViewById(R.id.background_view);
 		mBackgroundView2 = findViewById(R.id.background_view2);
 		mParentView = findViewById(R.id.relative_layout_control);
 		LinearLayout = (android.widget.LinearLayout) findViewById(R.id.linearlayout_button);
+		musicWave = (MusicWave) findViewById(R.id.musicWave);
+
+		musicWave.setEnabled(true);
+		musicWave.setActivated(true);
 
 		mActionOnOff2.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -561,7 +268,7 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 		});
 
 		ViewTreeObserver vto = LinearLayout.getViewTreeObserver();
-		vto.addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
+		vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
 			@Override
 			public void onGlobalLayout() {
 				height = LinearLayout.getMeasuredHeight();
@@ -582,7 +289,8 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 
 		recordfor = (TextView) findViewById(R.id.RecordFor);
 
-		recordfor.setOnClickListener(new View.OnClickListener() {
+		//If Pre Settings disabled
+		/*recordfor.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
 				RadialTimePickerDialogFragment rtpd = new RadialTimePickerDialogFragment()
@@ -593,13 +301,14 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 						.setThemeCustom(R.style.RadialPicker);
 				rtpd.show(getSupportFragmentManager(), "timePickerDialogFragment");
 
-				timepicker = true;
+				timePicker = true;
 			}
-		});
+		});*/
 
 		pausefor = (TextView) findViewById(R.id.PauseFor);
 
-		pausefor.setOnClickListener(new View.OnClickListener() {
+		//If Pre Settings disabled
+		/*pausefor.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
 				RadialTimePickerDialogFragment rtpd = new RadialTimePickerDialogFragment()
@@ -610,15 +319,29 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 						.setThemeCustom(R.style.RadialPicker);
 				rtpd.show(getSupportFragmentManager(), "timePickerDialogFragment");
 
-				timepicker = false;
+				timePicker = false;
 			}
-		});
+		});*/
 
 		final EditText et1 = (EditText) findViewById(R.id.editText);
-		//et1.setFilters(new InputFilter[]{ new InputFilterMinMax("1", "200")});
+		//Pre Settings
+		et1.setFocusable(false);
+		//et1.setFilters(new InputFilter[]{ new InputFilterMinMax("1", "200")}); // Max and Min Filter
 		final TextView tv1 = (TextView) findViewById(R.id.textView);
 
 		RadioGroup radioGroup = (RadioGroup) findViewById(R.id.radio_group);
+
+		// Pre Settings
+		RadioButton rb1 = (RadioButton) findViewById(R.id.radio_ninjas);
+		RadioButton rb2 = (RadioButton) findViewById(R.id.radio_pirates);
+		RadioButton rb3 = (RadioButton) findViewById(R.id.radio_warriors);
+
+		rb1.setChecked(true);
+		rb2.setClickable(false);
+		rb3.setClickable(false);
+		// Pre Settings
+
+		/* If Pre Settings are disabled
 		radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(RadioGroup group, int checkedId) {
@@ -647,7 +370,7 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
                     et1.setHint("-                  ");
 				}
 			}
-		});
+		});*/
 
 		/* Permission
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
@@ -656,10 +379,402 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 			initialise();
 		}*/
 
-		musicWave = (MusicWave) findViewById(R.id.musicWave);
-
 		service_init();
+	}
+
+	class C00501 implements BluetoothAdapter.LeScanCallback {
+		C00501() {
+		}
+
+		public void onLeScan(final BluetoothDevice device, final int rssi, byte[] scanRecord) {
+			ControlBlinkyActivity.this.runOnUiThread(new Runnable() {
+				public void run() {
+					ControlBlinkyActivity access$0 = ControlBlinkyActivity.this;
+					final BluetoothDevice bluetoothDevice = device;
+					final int i = rssi;
+					access$0.runOnUiThread(new Runnable() {
+						public void run() {
+							//ControlBlinkyActivity.this.addDevice(bluetoothDevice, i);
+						}
+					});
+				}
+			});
+		}
+	}
+
+    class C00541 implements ServiceConnection {
+        C00541() {
+        }
+
+        public void onServiceConnected(ComponentName className, IBinder rawBinder) {
+            ControlBlinkyActivity.this.mService = ((UartService.LocalBinder) rawBinder).getService();
+
+			mDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(deviceAddress);
+
+			mService.initialize();
+			mService.connect(deviceAddress);
+
+            if (!ControlBlinkyActivity.this.mService.initialize()) {
+                ControlBlinkyActivity.this.finish();
+            }
+        }
+
+        public void onServiceDisconnected(ComponentName classname) {
+            ControlBlinkyActivity.this.mService = null;
+        }
     }
+
+    class C00552 extends Handler {
+        C00552() {
+        }
+
+        public void handleMessage(Message msg) {
+        }
+    }
+
+    class C00593 extends BroadcastReceiver {
+
+        class C00561 implements Runnable {
+            C00561() {
+            }
+
+            public void run() {
+                String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
+                Log.d(TAG, "UART_CONNECT_MSG");
+            }
+        }
+
+        class C00572 implements Runnable {
+            C00572() {
+            }
+
+            public void run() {
+                String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
+                Log.d(TAG, "UART_DISCONNECT_MSG");
+                ControlBlinkyActivity.this.mService.close();
+            }
+        }
+
+        C00593() {
+        	Log.d(TAG, "Create BroadCastRec UART");
+        }
+
+        public void onReceive(final Context context, Intent intent) {
+			String action = intent.getAction();
+
+            Intent mIntent = intent;
+            if (action.equals(UartService.ACTION_GATT_CONNECTED)) {
+                ControlBlinkyActivity.this.runOnUiThread(new C00561());
+            }
+            if (action.equals(UartService.ACTION_GATT_DISCONNECTED)) {
+                ControlBlinkyActivity.this.runOnUiThread(new C00572());
+            }
+            if (action.equals(UartService.ACTION_GATT_SERVICES_DISCOVERED)) {
+                ControlBlinkyActivity.this.mService.enableTXNotification();
+            }
+            if (action.equals(UartService.ACTION_DATA_AVAILABLE)) {
+
+				final byte[] txValue = intent.getByteArrayExtra(UartService.EXTRA_DATA);
+
+				// Saving Array of 200 Times
+            	if(zaehler <= 200){
+
+					short[] test = convert(txValue);
+
+					//short
+					/*if (zaehler == 1) {
+						arrayF = test;
+					} else{
+						short[] c = new short[arrayF.length + test.length];
+						System.arraycopy(arrayF, 0, c, 0, arrayF.length);
+						System.arraycopy(test, 0, c, arrayF.length, test.length);
+						arrayF = c;
+					}*/
+
+					//byte
+					if (zaehler == 1) {
+						odd = txValue;
+					} else{
+						byte[] c = new byte[odd.length + txValue.length];
+						System.arraycopy(odd, 0, c, 0, odd.length);
+						System.arraycopy(txValue, 0, c, odd.length, txValue.length);
+						odd = c;
+					}
+
+            		zaehler+=1;
+				}
+
+				if(zaehler == 200){
+
+            		//Swap bytes
+            		final byte[] oddswap = new byte[odd.length];
+
+            		for(int q = 0; q < odd.length; q+=2){
+            			if(q < odd.length) {
+							oddswap[q] = odd[q + 1];
+							oddswap[q + 1] = odd[q];
+						}
+					}
+
+            		zaehler = 2000;
+
+					handler = new Handler();
+
+					final Runnable r = new Runnable() {
+						public void run() {
+
+							try {
+								String filePath = rawToWave(oddswap);
+
+								final MediaPlayer mediaPlayer = new MediaPlayer();
+								mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+								mediaPlayer.setDataSource(filePath);
+								mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+									@Override
+									public void onPrepared(MediaPlayer mp) {
+										mp.start();
+									}
+								});
+
+								// Check if Android Version is high enough for SoundWave
+								if (android.os.Build.VERSION.SDK_INT >= N) {
+
+									mVisualizer = new Visualizer(mediaPlayer.getAudioSessionId());
+									mVisualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[1]);
+									mVisualizer.setDataCaptureListener(
+											new Visualizer.OnDataCaptureListener() {
+												public void onWaveFormDataCapture(Visualizer visualizer,
+																				  byte[] bytes, int samplingRate) {
+													musicWave.updateVisualizer(bytes);
+												}
+
+												public void onFftDataCapture(Visualizer visualizer,
+																			 byte[] bytes, int samplingRate) {
+												}
+											}, Visualizer.getMaxCaptureRate() / 2, true, false);
+									mVisualizer.setEnabled(true);
+								}
+
+								mediaPlayer.prepareAsync();
+
+								mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+									@Override
+									public void onCompletion(MediaPlayer mp) {
+										SystemClock.sleep(2000); // 2 Sec
+										mp.start();
+									}
+								});
+
+							} catch (IOException e) {
+								String s = e.toString();
+								Log.d(TAG, "EXCEPTION: " + s);
+							}
+						}
+					};
+					r.run();
+				}
+            }
+            if (action.equals(UartService.DEVICE_DOES_NOT_SUPPORT_UART)) {
+                ControlBlinkyActivity.this.mService.disconnect();
+            }
+        }
+    }
+
+	public String rawToWave(byte[] rawArray) throws IOException {
+
+		String wav = "wav";
+		String filePath = getExternalFilesDir(wav).getPath().toString() + "/vocal.wav";
+
+		byte[] rawData = rawArray;
+		DataInputStream input = null;
+		try {
+			InputStream inFromServer;
+			DataInputStream in;
+
+			inFromServer = new InputStream() {
+				@Override
+				public int read() throws IOException {
+					return 0;
+				}
+			};
+			in = new DataInputStream(inFromServer);
+
+			byte[] buffer = rawArray;
+
+		} finally {
+			if (input != null) {
+				input.close();
+			}
+		}
+
+		DataOutputStream output = null;//following block is converting raw to wav.
+		try {
+			output = new DataOutputStream(new FileOutputStream(filePath));
+
+			long mySubChunk1Size = 16;
+			int myBitsPerSample= 16;
+			int myFormat = 1;
+			long myChannels = 2;
+			long mySampleRate = 7000;
+			long myByteRate = mySampleRate * myChannels * myBitsPerSample/16; // 8
+			int myBlockAlign = (int) (myChannels * myBitsPerSample/16); //8
+
+			long myDataSize = rawArray.length;
+			long myChunk2Size =  myDataSize * myChannels * myBitsPerSample/32;//16
+			long myChunkSize = 36 + myChunk2Size;
+
+			output.writeBytes("RIFF");                 // 00 - RIFF
+			output.write(intToByteArray((int) myChunkSize), 0, 4);     // 04 - how big is the rest of this file?
+			output.writeBytes("WAVE");                 // 08 - WAVE
+			output.writeBytes("fmt ");                 // 12 - fmt
+			output.write(intToByteArray((int) mySubChunk1Size), 0, 4); // 16 - size of this chunk
+			output.write(shortToByteArray((short) myFormat), 0, 2);        // 20 - what is the audio format? 1 for PCM = Pulse Code Modulation
+			output.write(shortToByteArray((short) myChannels), 0, 2);  // 22 - mono or stereo? 1 or 2?  (or 5 or ???)
+			output.write(intToByteArray((int) mySampleRate), 0, 4);        // 24 - samples per second (numbers per second)
+			output.write(intToByteArray((int) myByteRate), 0, 4);      // 28 - bytes per second
+			output.write(shortToByteArray((short) myBlockAlign), 0, 2);    // 32 - # of bytes in one sample, for all channels
+			output.write(shortToByteArray((short) myBitsPerSample), 0, 2); // 34 - how many bits in a sample(number)?  usually 16 or 24
+			output.writeBytes("data");                 // 36 - data
+			output.write(intToByteArray((int) myDataSize), 0, 4);      // 40 - how big is this data chunk
+			//output.write(ShortToByte_ByteBuffer_Method(rawArray));
+			output.write(rawArray);
+
+		} catch (Exception e) {
+			String s = e.toString();
+			Log.d(TAG, "ERROR: " + s);
+		} finally {
+			if (output != null) {
+				output.close();
+			}
+		}
+
+		return filePath;
+	}
+
+	private static byte[] intToByteArray(int i)
+	{
+		byte[] b = new byte[4];
+		b[0] = (byte) (i & 0x00FF);
+		b[1] = (byte) ((i >> 8) & 0x000000FF);
+		b[2] = (byte) ((i >> 16) & 0x000000FF);
+		b[3] = (byte) ((i >> 24) & 0x000000FF);
+
+		return b;
+	}
+
+	// convert a short to a byte array
+	public static byte[] shortToByteArray(short data)
+	{
+        /*
+         * NB have also tried:
+         * return new byte[]{(byte)(data & 0xff),(byte)((data >> 8) & 0xff)};
+         *
+         */
+
+        byte[] b = new byte[]{(byte)(data & 0xff),(byte)((data >>> 8) & 0xff)};
+
+		return b;
+	}
+
+    public short[] convert(byte[] array){
+
+		short[]converted = new short[array.length/2];
+
+		int a = 0;
+		int b = 0;
+
+		while(a < array.length){
+
+			short int16 = (short) (((array[a+1] & 0xFF) << 8) | (array[a] & 0xFF));
+
+			converted[b] = int16;
+
+			a+=2;
+			b+=1;
+
+			if(a >= 243){
+				a = 1321313213;
+			}
+		}
+
+		return converted;
+
+	}
+
+	@SuppressLint("WrongConstant")
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		switch (requestCode) {
+			case 1:
+				if (resultCode == -1 && data != null) {
+					this.mDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(deviceAddress);
+					Log.d(TAG, "... onActivityResultdevice.address==" + this.mDevice + "mserviceValue" + this.mService);
+					//this.mService.connect(deviceAddress);
+					return;
+				}
+				return;
+			case 2:
+				if (resultCode == -1) {
+					Toast.makeText(this, "Bluetooth has turned on ", 0).show();
+					return;
+				}
+				Log.d(TAG, "BT not enabled");
+				Toast.makeText(this, "Problem in BT Turning ON ", 0).show();
+				finish();
+				return;
+			default:
+				Log.e(TAG, "wrong request code");
+				return;
+		}
+	}
+
+	private ServiceConnection mServiceConnection = new ServiceConnection() {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			mBlinkyDevice = (BlinkyService.BlinkyBinder) service;
+
+			if (mBlinkyDevice.isConnected()) {
+                    mActionConnect.setText(getString(R.string.action_disconnect));
+
+				if (mBlinkyDevice.isButtonPressed()) {
+					mBackgroundView.setVisibility(View.VISIBLE);
+				} else {
+					mBackgroundView.setVisibility(View.INVISIBLE);
+				}
+
+			} else {
+				mActionConnect.setText(getString(R.string.action_connect));
+			}
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			mBlinkyDevice = null;
+		}
+	};
+
+	protected void onStop() {
+		Log.d(TAG, "onStop");
+		super.onStop();
+	}
+
+	protected void onPause() {
+		Log.d(TAG, "onPause");
+		super.onPause();
+	}
+
+	protected void onRestart() {
+		super.onRestart();
+		Log.d(TAG, "onRestart");
+	}
+
+	public void onResume() {
+		super.onResume();
+		Log.d(TAG, "onResume");
+		if (!this.mBtAdapter.isEnabled()) {
+			Log.i(TAG, "onResume - BT not enabled yet");
+			startActivityForResult(new Intent("android.bluetooth.adapter.action.REQUEST_ENABLE"), 2);
+		}
+	}
 
 	@SuppressLint("WrongConstant")
 	private void service_init() {
@@ -712,12 +827,12 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 	protected void onDestroy() {
 		super.onDestroy();
 		unbindService(mServiceConnection);
-		//unbindService(mServiceConnection2);
+		unbindService(mServiceConnection2);
 		LocalBroadcastManager.getInstance(this).unregisterReceiver(mBlinkyUpdateReceiver);
-		//LocalBroadcastManager.getInstance(this).unregisterReceiver(UARTStatusChangeReceiver);
+		LocalBroadcastManager.getInstance(this).unregisterReceiver(UARTStatusChangeReceiver);
 
 		mServiceConnection = null;
-		//mServiceConnection2 = null;
+		mServiceConnection2 = null;
 		mBlinkyDevice = null;
 	}
 
@@ -729,11 +844,9 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 				case BlinkyService.BROADCAST_LED_STATE_CHANGED: {
 					final boolean flag = intent.getBooleanExtra(BlinkyService.EXTRA_DATA, false);
 					if (flag) {
-						//mImageBulb.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.bulb_on));
 						mActionOnOff.setBackgroundResource(R.drawable.b_cancel_1);
 						bulb = true;
 					} else {
-						//mImageBulb.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.bulb_off));
 						mActionOnOff.setBackgroundResource(R.drawable.b_stop_3);
 						bulb = false;
 					}
@@ -742,11 +855,9 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
                 case BlinkyService.BROADCAST_LED2_STATE_CHANGED: {
                     final boolean flag = intent.getBooleanExtra(BlinkyService.EXTRA_DATA, false);
                     if (flag) {
-                        //mImageBulb2.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.bulb_on));
 						mActionOnOff2.setBackgroundResource(R.drawable.b_pause_3);
                         bulb2 = true;
                     } else {
-                        //mImageBulb2.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.bulb_off));
 						mActionOnOff2.setBackgroundResource(R.drawable.b_play_1);
                         bulb2 = false;
                     }
@@ -754,46 +865,12 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
                 }
 				case BlinkyService.BROADCAST_BUTTON_STATE_CHANGED: {
 					final boolean flag = intent.getBooleanExtra(BlinkyService.EXTRA_DATA, false);
-
-                    //mBackgroundView.setVisibility(View.VISIBLE);
-                    //Handler handler = new Handler();
-                    //handler.postDelayed(new Runnable() {
-                    //    @Override
-                    //    public void run() {
-                    //        mBackgroundView.setVisibility(View.INVISIBLE);
-                    //    }
-                    //}, 400);
-
-					/* If Button.pressed activated *//*
-					if(bulb == false && bulb2 == false){
-						mBackgroundView.setVisibility(View.INVISIBLE);
-						mBackgroundView2.setVisibility(View.INVISIBLE);
-					} else if(bulb == true){
-						mBackgroundView.setVisibility(View.VISIBLE);
-						mBackgroundView2.setVisibility(View.INVISIBLE);
-					}*/
+						//Empfangen
 					break;
 				}
                 case BlinkyService.BROADCAST_BUTTON2_STATE_CHANGED: {
                     final boolean flag = intent.getBooleanExtra(BlinkyService.EXTRA_DATA, false);
-
-                    //mBackgroundView2.setVisibility(View.VISIBLE);
-                    //Handler handler = new Handler();
-                    //handler.postDelayed(new Runnable() {
-					//    @Override
-                    //    public void run() {
-                    //        mBackgroundView2.setVisibility(View.INVISIBLE);
-                    //    }
-                    //}, 400);
-
-                    /* If Button.pressed activated *//*
-                    if(bulb == false && bulb2 == false){
-                        mBackgroundView2.setVisibility(View.INVISIBLE);
-                        mBackgroundView.setVisibility(View.INVISIBLE);
-                    } else if (bulb2 == true){
-                        mBackgroundView2.setVisibility(View.VISIBLE);
-                        mBackgroundView.setVisibility(View.INVISIBLE);
-                    }*/
+						//Empfangen
                     break;
                 }
 				case BlinkyService.BROADCAST_CONNECTION_STATE: {
@@ -804,8 +881,6 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
 							break;
 						case BleProfileService.STATE_DISCONNECTED:
 							mActionConnect.setText(getString(R.string.action_connect));
-							//mImageBulb.setImageDrawable(ContextCompat.getDrawable(ControlBlinkyActivity.this, R.drawable.bulb_off));
-							//mImageBulb2.setImageDrawable(ContextCompat.getDrawable(ControlBlinkyActivity.this, R.drawable.bulb_off));
 							mActionOnOff2.setBackgroundResource(R.drawable.b_play_1);
 							mActionOnOff.setBackgroundResource(R.drawable.b_stop_3);
 							break;
@@ -876,7 +951,7 @@ public class ControlBlinkyActivity extends AppCompatActivity implements RadialTi
         String formattedhour = String.format("%02d", hourOfDay);
         String formattedminute = String.format("%02d", minute);
 
-        if(timepicker) {
+        if(timePicker) {
             recordfor.setText(formattedhour + ":" + formattedminute);
         }else{
             pausefor.setText(formattedhour + ":" + formattedminute);

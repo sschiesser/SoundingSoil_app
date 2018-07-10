@@ -28,6 +28,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * UartService
+ *
+ * @use Connection to UART Service from ControlBinkyActivity.
+ *
+ * @author Patrick Lüthi
+ *
+ */
+
 package no.nordicsemi.android.blinky;
 
 import android.annotation.SuppressLint;
@@ -63,7 +72,7 @@ public class UartService extends Service {
     private static final int STATE_CONNECTED = 2;
     private static final int STATE_CONNECTING = 1;
     private static final int STATE_DISCONNECTED = 0;
-    private static final String TAG = "YEAH2";
+    private static final String TAG = "UartService";
     public static final UUID TX_CHAR_UUID = UUID.fromString("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
     public static final UUID TX_POWER_LEVEL_UUID = UUID.fromString("00002a07-0000-1000-8000-00805f9b34fb");
     public static final UUID TX_POWER_UUID = UUID.fromString("00001804-0000-1000-8000-00805f9b34fb");
@@ -86,6 +95,7 @@ public class UartService extends Service {
 
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             String intentAction;
+            Log.d(TAG, "IntentAction" + newState);
             if (newState == 2) {
                 intentAction = UartService.ACTION_GATT_CONNECTED;
                 UartService.this.mConnectionState = 2;
@@ -165,7 +175,7 @@ public class UartService extends Service {
     }
 
     public boolean connect(String address) {
-        Log.d("YEAH", "Connect TRY!" + address);
+        Log.d(TAG, "Connect TRY!" + address);
 
         if (this.mBluetoothAdapter == null || address == null) {
             Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
@@ -176,7 +186,7 @@ public class UartService extends Service {
                 Log.w(TAG, "Device not found.  Unable to connect.");
                 return false;
             }
-            this.mBluetoothGatt = device.connectGatt(this, false, this.mGattCallback);
+            this.mBluetoothGatt = device.connectGatt(this, true, this.mGattCallback);
             Log.d(TAG, "Trying to create a new connection.");
             this.mBluetoothDeviceAddress = address;
             this.mConnectionState = 1;
